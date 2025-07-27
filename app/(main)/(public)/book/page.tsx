@@ -1,6 +1,6 @@
 'use client'
 
-// import Loading from "@/components/Loading"
+import Loading from "@/components/Loading"
 import { useUser } from "@clerk/nextjs"
 import { redirect } from "next/navigation"
 
@@ -9,7 +9,7 @@ export default function PublicPage() {
 
     if (!isLoaded) {
         // Display loading until user data is loaded
-        // return <Loading />
+        return <Loading />
     }
 
     if (!user) {
