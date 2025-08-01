@@ -13,14 +13,18 @@ import { useTransition } from "react"
 import Link from "next/link"
 import { createEvent, deleteEvent, updateEvent } from "@/server/actions/events"
 import { useRouter } from "next/navigation"
+import type { Resolver } from "react-hook-form"
 
 // Marks this as a Client Component in Next.js
 
+type FormValues = z.infer<typeof eventFormSchema>
+
+// force the resolver’s input/output to both be FormValues
+const resolver = zodResolver(eventFormSchema) as Resolver<FormValues, any>
+
 
 // Component to handle creating/editing/deleting an event
-export default function EventForm({
-                                      event, // Destructure the `event` object from the props
-                                  }: {
+export default function EventForm({ event }: {
     // Define the shape (TypeScript type) of the expected props
     event?: { // Optional `event` object (might be undefined if creating a new event)
         id: string // Unique identifier for the event
@@ -41,20 +45,11 @@ export default function EventForm({
     const router = useRouter()
 
 
-    const form = useForm<z.infer<typeof eventFormSchema>>({
-        resolver: zodResolver(eventFormSchema), // Validate with Zod schema
+    const form = useForm({
+        resolver, // Validate with Zod schema
         defaultValues: event
-            ? {
-                // If `event` is provided (edit mode), spread its existing properties as default values
-                ...event,
-            }
-            : {
-                // If `event` is not provided (create mode), use these fallback defaults
-                isActive: true,             // New events are active by default
-                durationInMinutes: 30,      // Default duration is 30 minutes
-                description: '',            // Ensure controlled input: default to empty string
-                name: '',                   // Ensure controlled input: default to empty string
-            },
+            ? { ...event }
+            : { name: "", description: "", durationInMinutes: 30, isActive: true },
 
     })
 
