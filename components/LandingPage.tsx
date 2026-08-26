@@ -42,7 +42,7 @@ export default function LandingPage() {
                 <SignIn
                     routing="hash" // Keeps sign-in UI on the same page using hash-based routing
                     appearance={{
-                        baseTheme: neobrutalism, // Applies the neobrutalism theme style to the sign-in UI
+                        ...neobrutalism, // Applies the neobrutalism theme style to the sign-in UI (Clerk v7: themes spread directly)
                     }}
                 />
             </div>
