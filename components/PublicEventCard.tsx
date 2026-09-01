@@ -1,44 +1,75 @@
 import { formatEventDescription } from "@/lib/formatters"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card"
+import type { PublicEvent } from "@/server/actions/events"
 import Link from "next/link"
-import { Button } from "./ui/button"
+import { ArrowRight, Clock, MapPin } from "lucide-react"
 
 // Type definition for event card props
 type PublicEventCardProps = {
-    id: string
-    name: string
-    clerkUserId: string
-    description: string | null
-    durationInMinutes: number
+    profileHandle: string
+    event: PublicEvent
+    bookingDisabled?: boolean
   }
 
 // Component to display a single event card
 export default  function PublicEventCard({
-    id,
-    name,
-    description,
-    clerkUserId,
-    durationInMinutes,
+    profileHandle,
+    event,
+    bookingDisabled = false,
     }: PublicEventCardProps) {
+        const className = bookingDisabled
+          ? "grid gap-4 rounded-lg border border-border/80 bg-card/60 p-5 text-card-foreground opacity-75 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+          : "group grid gap-4 rounded-lg border border-border/80 bg-card p-5 text-card-foreground shadow-[0_0_0_1px_transparent] transition-colors hover:border-primary/70 hover:bg-surface-raised hover:shadow-[0_0_28px_-16px_var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+
+        const content = (
+          <>
+            <div className="min-w-0">
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+                <h3 className="break-words font-display text-xl font-semibold tracking-normal">
+                  {event.name}
+                </h3>
+              </div>
+              {event.description && (
+                <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  {event.description}
+                </p>
+              )}
+              <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 px-2.5 py-1 font-mono">
+                  <Clock className="size-3.5 text-primary" />
+                  {formatEventDescription(event.durationInMinutes)}
+                </span>
+                <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/80 px-2.5 py-1">
+                  <MapPin className="size-3.5 shrink-0 text-primary" />
+                  <span className="truncate">{event.location}</span>
+                </span>
+              </div>
+            </div>
+            <div className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md border border-border/80 bg-background px-3 text-sm font-medium text-foreground transition-colors group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
+              {bookingDisabled ? "Availability needed" : "Book"}
+              {!bookingDisabled && (
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+              )}
+              <span className="sr-only">
+                {bookingDisabled ? `${event.name} is not available to book` : `Select ${event.name}`}
+              </span>
+            </div>
+          </>
+        )
+
+        if (bookingDisabled) {
+          return (
+            <div className={className} aria-disabled="true">
+              {content}
+            </div>
+          )
+        }
+
         return (
-            <Card className="flex flex-col border-4 border-blue-500/10 shadow-2xl transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110">
-              <CardHeader>
-                {/* Card title and description */}
-                <CardTitle>{name}</CardTitle>
-                <CardDescription>
-                  {formatEventDescription(durationInMinutes)} {/* Format and display event duration */}
-                </CardDescription>
-              </CardHeader>
-              {/* Render event description if available */}
-              {description && <CardContent>{description}</CardContent>}
-              <CardFooter className="flex justify-end gap-2 mt-auto">
-                {/* Select button that links to the booking page for the specific event */}
-                <Button
-                  className="cursor-pointer hover:scale-105 bg-blue-400 hover:bg-blue-600"
-                 asChild>
-                  <Link href={`/book/${clerkUserId}/${id}`}>Select</Link>
-                </Button>
-              </CardFooter>
-            </Card>
+            <Link
+              href={`/book/${profileHandle}/${event.slug ?? event.id}`}
+              className={className}
+            >
+              {content}
+            </Link>
           )
     }

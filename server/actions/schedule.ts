@@ -11,7 +11,7 @@ import { BatchItem } from "drizzle-orm/batch"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { getCalendarEventTimes } from "../google/googleCalendar"
-import { addMinutes, areIntervalsOverlapping, isFriday, isMonday, isSaturday, isSunday, isThursday, isTuesday, isWednesday, isWithinInterval, setHours, setMinutes } from "date-fns"
+import { addMinutes, areIntervalsOverlapping, eachDayOfInterval, isFriday, isMonday, isSaturday, isSunday, isThursday, isTuesday, isWednesday, isWithinInterval, setHours, setMinutes, startOfDay } from "date-fns"
 import { DAYS_OF_WEEK_IN_ORDER } from "@/constants"
 
 
@@ -107,10 +107,10 @@ export async function saveSchedule(
  */
 export async function getValidTimesFromSchedule(
     timesInOrder: Date[], // All possible time slots to check
-    event: { clerkUserId: string; durationInMinutes: number } // Event-specific data
+    event: { clerkUserId: string; durationInMinutes: number; bufferMinutes?: number } // Event-specific data
 ) : Promise<Date[]> {
 
-  const {clerkUserId: userId, durationInMinutes} = event
+  const { clerkUserId: userId, durationInMinutes, bufferMinutes = 0 } = event
 
   // Define the start and end of the overall range to check
   const start = timesInOrder[0]
@@ -153,11 +153,16 @@ export async function getValidTimesFromSchedule(
       end: addMinutes(intervalDate, durationInMinutes), // Proposed end time (start + duration)
     }
 
+    const blockedInterval = {
+      start: addMinutes(eventInterval.start, -bufferMinutes),
+      end: addMinutes(eventInterval.end, bufferMinutes),
+    }
+
     // Keep only the time slots that satisfy two conditions:
     return (
         // 1. This time slot does not overlap with any existing calendar events
         eventTimes.every(eventTime => {
-          return !areIntervalsOverlapping(eventTime, eventInterval)
+          return !areIntervalsOverlapping(eventTime, blockedInterval)
         }) &&
         // 2. The entire proposed event fits within at least one availability window
         availabilities.some(availability => {
@@ -177,6 +182,130 @@ export async function getValidTimesFromSchedule(
 
 
 
+}
+
+export async function getValidTimesForEventRange({
+  start,
+  end,
+  event,
+  stepMinutes = 15,
+}: {
+  start: Date
+  end: Date
+  event: {
+    clerkUserId: string
+    durationInMinutes: number
+    bufferMinutes?: number
+  }
+  stepMinutes?: number
+}): Promise<Date[]> {
+  if (start.getTime() > end.getTime()) return []
+
+  const { clerkUserId: userId, durationInMinutes, bufferMinutes = 0 } = event
+  const schedule = await getSchedule(userId)
+
+  if (schedule == null) return []
+
+  const groupedAvailabilities = Object.groupBy(
+    schedule.availabilities,
+    a => a.dayOfWeek
+  )
+
+  const candidateTimes = getCandidateTimesFromSchedule({
+    groupedAvailabilities,
+    scheduleTimezone: schedule.timezone,
+    start,
+    end,
+    durationInMinutes,
+    stepMinutes,
+  })
+
+  if (candidateTimes.length === 0) return []
+
+  const eventTimes = await getCalendarEventTimes(userId, {
+    start,
+    end,
+  })
+
+  return candidateTimes.filter(intervalDate => {
+    const eventInterval = {
+      start: intervalDate,
+      end: addMinutes(intervalDate, durationInMinutes),
+    }
+
+    const blockedInterval = {
+      start: addMinutes(eventInterval.start, -bufferMinutes),
+      end: addMinutes(eventInterval.end, bufferMinutes),
+    }
+
+    return eventTimes.every(eventTime => {
+      return !areIntervalsOverlapping(eventTime, blockedInterval)
+    })
+  })
+}
+
+function roundDateUpToStep(date: Date, stepMinutes: number) {
+  const stepMs = stepMinutes * 60 * 1000
+  return new Date(Math.ceil(date.getTime() / stepMs) * stepMs)
+}
+
+function getCandidateTimesFromSchedule({
+  groupedAvailabilities,
+  scheduleTimezone,
+  start,
+  end,
+  durationInMinutes,
+  stepMinutes,
+}: {
+  groupedAvailabilities: Partial<
+    Record<
+      (typeof DAYS_OF_WEEK_IN_ORDER)[number],
+      (typeof ScheduleAvailabilityTable.$inferSelect)[]
+    >
+  >
+  scheduleTimezone: string
+  start: Date
+  end: Date
+  durationInMinutes: number
+  stepMinutes: number
+}) {
+  const stepMs = stepMinutes * 60 * 1000
+  const durationMs = durationInMinutes * 60 * 1000
+  const rangeStart = roundDateUpToStep(start, stepMinutes).getTime()
+  const rangeEnd = end.getTime()
+  const seen = new Set<number>()
+  const candidates: Date[] = []
+
+  for (const day of eachDayOfInterval({
+    start: startOfDay(start),
+    end: startOfDay(end),
+  })) {
+    const availabilities = getAvailabilities(
+      groupedAvailabilities,
+      day,
+      scheduleTimezone
+    )
+
+    for (const availability of availabilities) {
+      const firstStart = Math.max(
+        roundDateUpToStep(availability.start, stepMinutes).getTime(),
+        rangeStart
+      )
+      const lastStart = Math.min(
+        availability.end.getTime() - durationMs,
+        rangeEnd
+      )
+
+      for (let time = firstStart; time <= lastStart; time += stepMs) {
+        if (seen.has(time)) continue
+
+        seen.add(time)
+        candidates.push(new Date(time))
+      }
+    }
+  }
+
+  return candidates.sort((a, b) => a.getTime() - b.getTime())
 }
 
 

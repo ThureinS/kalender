@@ -1,22 +1,21 @@
-'use client'
-
-import Loading from "@/components/Loading"
-import { useUser } from "@clerk/nextjs"
+import { getOrCreateProfile } from "@/server/actions/profiles"
+import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
-export default function PublicPage() {
-    const { user, isLoaded } = useUser()  // Using `isLoaded` to check if user data is available
-
-    if (!isLoaded) {
-        // Display loading until user data is loaded
-        return <Loading />
-    }
-
+export default async function PublicPage() {
+    const user = await currentUser()
     if (!user) {
         // Redirect to login if no user is found
         return redirect('/login')
     }
 
+    const profile = await getOrCreateProfile({
+        clerkUserId: user.id,
+        displayName: user.fullName,
+        avatarUrl: user.imageUrl,
+        email: user.primaryEmailAddress?.emailAddress,
+    })
+
     // Once user is available, redirect to the booking page [Public Profile Page]
-    return redirect(`/book/${user.id}`)
+    return redirect(`/book/${profile.handle}`)
 }

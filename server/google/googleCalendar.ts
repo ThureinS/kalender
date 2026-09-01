@@ -98,6 +98,13 @@ export async function getCalendarEventTimes(
 
 
     } catch (err: any) {
+        if (process.env.NODE_ENV !== "production") {
+            console.warn(
+                `Skipping Google Calendar busy-time lookup in development: ${err.message || err}`
+            )
+            return []
+        }
+
         throw new Error(`Failed to fetch calendar events: ${err.message || err}`)
 
     }
@@ -112,6 +119,7 @@ export async function createCalendarEvent({
                                               guestNotes,
                                               durationInMinutes,
                                               eventName,
+                                              eventLocation,
                                           }: {
     clerkUserId: string // The unique ID of the Clerk user.
     guestName: string // The name of the guest attending the event.
@@ -120,6 +128,7 @@ export async function createCalendarEvent({
     guestNotes?: string | null // Optional notes for the guest (can be null or undefined).
     durationInMinutes: number // The duration of the event in minutes.
     eventName: string // The name or title of the event.
+    eventLocation?: string | null // Where the meeting should happen.
 }): Promise<calendar_v3.Schema$Event> {  // Specify the return type as `Event`, which represents the created calendar event.
 
     try {
@@ -163,6 +172,7 @@ export async function createCalendarEvent({
                     dateTime: addMinutes(startTime, durationInMinutes).toISOString(), // Calculate the end time based on the duration.
                 },
                 summary: `${guestName} + ${calendarUser.firstName} ${calendarUser.lastName}: ${eventName}`, // Title of the event, including the guest and user names.
+                location: eventLocation || undefined,
             },
         })
 
@@ -173,4 +183,3 @@ export async function createCalendarEvent({
         throw new Error(`Failed to create calendar event: ${error.message || error}`) // Throw a new error with a detailed message.
     }
 }
-  

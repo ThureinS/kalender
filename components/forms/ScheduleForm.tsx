@@ -132,8 +132,10 @@ export function ScheduleForm({
                             <div className="flex flex-col gap-2">
                                 <Button
                                     type="button"
-                                    className="size-6 p-1 cursor-pointer hover:scale-200"
+                                    size="icon"
+                                    className="size-7"
                                     variant="outline"
+                                    aria-label={`Add availability for ${dayOfWeek}`}
                                     onClick={() => {
                                         addAvailability({
                                             dayOfWeek,
@@ -142,7 +144,7 @@ export function ScheduleForm({
                                         })
                                     }}
                                 >
-                                    <Plus  color="red" />
+                                    <Plus />
                                 </Button>
 
                                 {/* Render availability entries for this day */}
@@ -191,8 +193,10 @@ export function ScheduleForm({
                                                 {/* Remove availability */}
                                                 <Button
                                                     type="button"
-                                                    className="size-6 p-1 cursor-pointer hover:bg-red-900"
+                                                    size="icon"
+                                                    className="size-7"
                                                     variant="destructive"
+                                                    aria-label={`Remove ${dayOfWeek} availability ${labelIndex + 1}`}
                                                     onClick={() => removeAvailability(field.index)}
                                                 >
                                                     <X />
@@ -233,7 +237,6 @@ export function ScheduleForm({
                 {/* Save button */}
                 <div className="flex gap-2 justify-start">
                     <Button
-                        className="cursor-pointer hover:scale-105 bg-blue-400 hover:bg-blue-600"
                         disabled={form.formState.isSubmitting}
                         type="submit">
                         Save

@@ -2,12 +2,45 @@
 
 import { db } from "@/drizzle/db";
 import { EventTable } from "@/drizzle/schema";
+import { slugify } from "@/lib/slugs";
 import { eventFormSchema } from "@/schema/events";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+
+async function getUniqueEventSlug(
+  clerkUserId: string,
+  value: string,
+  currentEventId?: string
+) {
+  const base = slugify(value) || "event"
+
+  for (let index = 0; index < 20; index++) {
+    const slug = index === 0 ? base : `${base}-${index + 1}`
+    const existing = await db.query.EventTable.findFirst({
+      where: ({ clerkUserId: userIdCol, slug: slugCol }, { and, eq }) =>
+        and(eq(userIdCol, clerkUserId), eq(slugCol, slug)),
+    })
+
+    if (!existing || existing.id === currentEventId) {
+      return slug
+    }
+  }
+
+  return `${base}-${Date.now()}`
+}
+
+function normalizeEventData(data: z.infer<typeof eventFormSchema>) {
+  return {
+    ...data,
+    name: data.name.trim(),
+    description: data.description?.trim() || null,
+    location: data.location.trim(),
+    slug: data.slug ? slugify(data.slug) : undefined,
+  }
+}
 
 
 // This function creates a new event in the database after validating the input data.
@@ -25,9 +58,12 @@ export async function createEvent(
       if (!success || !userId) {
         throw new Error("Invalid event data or user not authenticated.")
       }
+
+      const eventData = normalizeEventData(data)
+      const slug = await getUniqueEventSlug(userId, eventData.slug || eventData.name)
   
       // Insert the validated event data into the database, linking it to the authenticated user
-      await db.insert(EventTable).values({ ...data, clerkUserId: userId })
+      await db.insert(EventTable).values({ ...eventData, slug, clerkUserId: userId })
      
       
     } catch (error: any) {
@@ -57,11 +93,14 @@ export async function updateEvent(
       if (!success || !userId) {
         throw new Error("Invalid event data or user not authenticated.")
       }
+
+      const eventData = normalizeEventData(data)
+      const slug = await getUniqueEventSlug(userId, eventData.slug || eventData.name, id)
   
       // Attempt to update the event in the database
       const { rowCount } = await db
         .update(EventTable)
-        .set({ ...data }) // Update with validated data
+        .set({ ...eventData, slug }) // Update with validated data
         .where(and(eq(EventTable.id, id), eq(EventTable.clerkUserId, userId))) // Ensure user owns the event
   
       // If no event was updated (either not found or not owned by the user), throw an error
@@ -148,6 +187,23 @@ export async function getEvent(userId: string, eventId: string): Promise<EventRo
   return event ?? undefined // Explicitly return undefined if not found
 }
 
+export async function getEventBySlug(
+  userId: string,
+  eventSlug: string
+): Promise<EventRow | undefined> {
+  const event = await db.query.EventTable.findFirst({
+    where: ({ clerkUserId, isActive, slug, visibility }, { and, eq }) =>
+      and(
+        eq(clerkUserId, userId),
+        eq(isActive, true),
+        eq(visibility, "public"),
+        eq(slug, eventSlug)
+      ),
+  })
+
+  return event ?? undefined
+}
+
 
 // Define a new type for public events, which are always active
 // It removes the generic 'isActive' field and replaces it with a literal true
@@ -162,8 +218,8 @@ export async function getPublicEvents(clerkUserId: string): Promise<PublicEvent[
   // - the event is marked as active
   // Events are ordered alphabetically (case-insensitive) by name
   const events = await db.query.EventTable.findMany({
-    where: ({ clerkUserId: userIdCol, isActive }, { eq, and }) =>
-      and(eq(userIdCol, clerkUserId), eq(isActive, true)),
+    where: ({ clerkUserId: userIdCol, isActive, visibility }, { eq, and }) =>
+      and(eq(userIdCol, clerkUserId), eq(isActive, true), eq(visibility, "public")),
     orderBy: ({ name }, { asc, sql }) => asc(sql`lower(${name})`),
   })
 

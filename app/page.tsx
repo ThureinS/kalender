@@ -9,7 +9,7 @@ export default async function HomePage() {
     // If no user is logged in, render the public landing page
     if (!user) return <LandingPage />
 
-    // If user is logged in, redirect them to the events page
-    return redirect('/events')
+    // If user is logged in, redirect them to the workspace overview
+    return redirect('/overview')
 
 }

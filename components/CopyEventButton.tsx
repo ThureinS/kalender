@@ -17,8 +17,7 @@ type CopyState = "idle" | "copied" | "error"
 interface CopyEventButtonProps
   extends Omit<React.ComponentProps<"button">, "children" | "onClick">, // Inherit all native button props except children & onClick
     VariantProps<typeof buttonVariants> { // Allow variant and size props from button styling
-  eventId: string // Required: event ID for the booking link
-  clerkUserId: string // Required: user ID for the booking link
+  bookingPath: string // Public booking path to copy
 }
 
 // Returns the appropriate button label based on the current copy state
@@ -38,8 +37,7 @@ function getCopyLabel(state: CopyState) {
 
 // Reusable button component that copies a URL to clipboard
 export function CopyEventButton({
-    eventId,
-    clerkUserId,
+    bookingPath,
     className,
     variant,
     size,
@@ -50,7 +48,7 @@ export function CopyEventButton({
     const [copyState, setCopyState] = useState<CopyState>("idle") // Manage the copy feedback state
 
     const handleCopy = () => {
-        const url = `${location.origin}/book/${clerkUserId}/${eventId}` // Construct the booking URL
+        const url = `${location.origin}${bookingPath}` // Construct the booking URL
     
         navigator.clipboard
           .writeText(url) // Try to copy the URL

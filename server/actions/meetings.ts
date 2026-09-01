@@ -54,6 +54,7 @@ export async function createMeeting(
       startTime: startInTimezone, // adjusted to the right timezone
       durationInMinutes: event.durationInMinutes, // use duration from the event
       eventName: event.name, // use event name from DB
+      eventLocation: event.location,
     });
     return {clerkUserId: data.clerkUserId, eventId : data.eventId, startTime: data.startTime}
   } catch (error: any) {
