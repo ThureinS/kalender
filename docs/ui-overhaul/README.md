@@ -47,21 +47,34 @@ Current foundation state:
 - `npm run build` passes.
 - `npx tsc --noEmit` passes.
 
-Open checkpoint:
+Committed checkpoint:
 
 - Phase 4 desktop/mobile browser QA passed for `/overview`, `/events`,
   `/schedule`, `/booking-page`, `/bookings`, `/integrations`, `/settings`,
   `/book/khana-u-thone`, and `/book/khana-u-thone/discovery-call`.
-- Phase 5 build/typecheck passed for the Event Type Editor changes. Browser QA
-  should cover `/events`, `/events/new`, an existing event edit route,
-  `/booking-page`, `/book/khana-u-thone`, and
-  `/book/khana-u-thone/discovery-call`.
-- Manual browser QA was attempted on September 1, 2026, but the local dev
-  server accepted localhost connections without returning route responses after
-  middleware compilation. `npm run build` and `npx tsc --noEmit` still pass.
+- Phase 5 build/typecheck passed for the Event Type Editor changes.
+- The UI overhaul checkpoint was committed on September 1, 2026 as
+  `f83976d Overhaul scheduling product UI`.
+- Manual browser QA on September 1, 2026 confirmed that the earlier localhost
+  route-response issue was a local port collision: port 3000 was serving a
+  different Next app. Kalender was verified on port 3002.
+- Intermittent Neon connection timeouts can still slow or fail individual local
+  route loads. Overview now degrades when a workspace query fails, but public
+  booking routes still depend on database reads and should be retried when Neon
+  connectivity is unstable.
 - A development-only Google OAuth warning can appear on public event routes when
   no valid local Google token is available; the route still renders and the app
   skips busy-time lookup in development.
+
+Next checkpoint:
+
+- Start Phase 6: Onboarding.
+- Keep the existing App Shell and Storefront visual model. Onboarding belongs in
+  the Daylight App Shell, while final launch/share previews may link to the
+  Midnight public booking page.
+- Reuse the current profile, availability, event, and integration behavior where
+  possible. Do not duplicate full forms unless a smaller onboarding-specific
+  component is clearly simpler and writes through the same server actions.
 
 ## Product Goal
 
@@ -503,6 +516,34 @@ Done when:
 
 - A new user can reach a complete public booking page through guided setup.
 - The setup state is visible from the workspace.
+
+Implementation notes:
+
+- Add a private onboarding route, recommended path: `/onboarding`.
+- Use the existing Daylight App Shell visual language and layout primitives.
+- Prefer a guided setup shell with steps and clear progress over a marketing
+  page. This is a product workflow, not a landing page.
+- Recommended steps:
+  1. Booking Page identity: display name, Link Name, headline, bio, timezone,
+     location, and accent.
+  2. Availability: at least one saved weekly availability window is required.
+  3. First Event: title, Link Name, duration, location, visibility, and buffer.
+  4. Google Calendar: show connection state and route to the existing
+     integration action.
+  5. Launch: show the public booking URL and next action to preview/copy/share.
+- Reuse existing server actions and validation schemas:
+  `updateCurrentUserProfile`, `saveSchedule`, `createEvent`, `getOrCreateProfile`,
+  `getSchedule`, and `getEvents`.
+- Connect completion state to Overview by using the same readiness rules already
+  visible there: profile identity, saved availability, public active event, and
+  Google account connection.
+- Do not auto-create availability silently. If no availability is saved, booking
+  stays blocked until the user explicitly saves at least one window.
+- Consider adding `onboardingCompletedAt` only when it adds real value beyond
+  derived readiness. Derived readiness is enough for the first implementation if
+  it avoids unnecessary schema churn.
+- Browser QA should cover a new or reset user state, a partially complete setup,
+  and a fully complete setup that can open `/book/{handle}`.
 
 ### Phase 7. Demo/Seed Data
 
