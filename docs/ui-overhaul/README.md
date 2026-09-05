@@ -5,7 +5,7 @@ meant to make the redesign continuable in small chunks across sessions.
 
 ## Current Status
 
-Phases 1-5 have been implemented in the production codebase.
+Phases 1-6 have been implemented in the production codebase.
 
 Current foundation state:
 
@@ -35,6 +35,17 @@ Current foundation state:
   protect time around bookings.
 - Overview now gives the first incomplete setup item stronger visual weight so
   the next workspace action is obvious.
+- A private `/onboarding` route now guides first-run setup inside the Daylight
+  App Shell. It covers Booking Page identity, explicit saved availability, first
+  public event, Google Calendar connection, and launch/share actions.
+- Overview and Onboarding now share setup readiness rules for profile identity,
+  saved availability, a public active event, and Google Calendar connection.
+- Onboarding reuses the existing Booking Page, Availability, and Event editor
+  behavior. Event and schedule forms have small onboarding-specific options for
+  return routing and blocking empty availability saves.
+- Onboarding does not silently create default availability. The Availability
+  step requires the user to add and save at least one weekly window before the
+  Launch step can become shareable.
 - Private App Shell navigation and content use the same Daylight surface.
 - Overview degrades gracefully when one workspace data query fails instead of
   showing the full Next.js application error screen.
@@ -53,11 +64,57 @@ Committed checkpoint:
   `/schedule`, `/booking-page`, `/bookings`, `/integrations`, `/settings`,
   `/book/khana-u-thone`, and `/book/khana-u-thone/discovery-call`.
 - Phase 5 build/typecheck passed for the Event Type Editor changes.
+- Phase 6 build/typecheck passed for the private Onboarding route.
 - The UI overhaul checkpoint was committed on September 1, 2026 as
   `f83976d Overhaul scheduling product UI`.
+- The latest handoff checkpoint before Phase 6 was committed on September 1,
+  2026 as `8a9e28a Document onboarding phase handoff`.
 - Manual browser QA on September 1, 2026 confirmed that the earlier localhost
   route-response issue was a local port collision: port 3000 was serving a
   different Next app. Kalender was verified on port 3002.
+- Phase 6 browser QA on September 1, 2026 used port 3003 because port 3002 was
+  already occupied. `/onboarding` rendered under the private App Shell, mobile
+  QA at 390px showed no horizontal overflow, Launch copy/share stayed disabled
+  until all readiness checks passed, and Overview checklist links resolved to
+  `/onboarding` step anchors.
+- On September 2, 2026, Overview was updated to show a primary "Continue
+  Onboarding" action until all readiness checks pass. Once setup is complete, it
+  switches back to "Open Public URL."
+- On September 3, 2026, onboarding QA found inconsistent oversized success
+  toasts, no event-created toast, and no direct Google Calendar connection
+  action. Toasts now use a shared app helper with icons and compact styling, the
+  event editor reports create/update/delete status, and Integrations/Onboarding
+  expose a direct Clerk Google OAuth connection action.
+- On September 3, 2026, public Booking Page QA showed that available events were
+  pushed below the fold in narrower desktop panes. The public split layout now
+  starts at the medium breakpoint so the identity rail and event list sit side
+  by side earlier.
+- On September 3, 2026, follow-up manual QA confirmed public event visibility
+  on `/book/utility-acc` at desktop and mobile widths. The event detail page
+  exposes selectable slots, and the confirm action now remains disabled until a
+  slot, guest name, and valid guest email are present.
+- On September 3, 2026, Google Calendar readiness was tightened to require an
+  approved Google Calendar OAuth scope, not merely a Google sign-in account.
+  Overview, Onboarding, and Integrations now share that stricter rule.
+- On September 3, 2026, Google Calendar OAuth QA reached Google's "This app is
+  blocked" screen before returning to Clerk. The connection is blocked by Google
+  OAuth app configuration, not by the onboarding route. Kalender now requests
+  the narrower `calendar.events.freebusy` scope for conflict checks instead of
+  `calendar.readonly`, while keeping `calendar.events` for confirmed meeting
+  creation.
+- On September 5, 2026, follow-up Google Cloud QA showed a concrete OAuth
+  configuration mismatch. Google's blocked OAuth URL used client id
+  `787459168867-0v2orf3qo56uocsi84iroseoahhuovdm.apps.googleusercontent.com`,
+  while the visible Google Cloud client being edited was
+  `564227907042-ojcqbuimvlb360o2dvju5vlr11obn79q.apps.googleusercontent.com`.
+  The active Clerk domain in this local app is
+  `included-garfish-63.clerk.accounts.dev`, but the visible Google client only
+  showed a `skilled-wombat-27.clerk.accounts.dev` callback. The next session
+  should either find/edit the `787459168867-...` OAuth client, or update Clerk's
+  Google social connection to use the currently edited Google client id/secret.
+- On September 3, 2026, event creation feedback was retested. Event saves now
+  use a loading toast and route with a short-lived `toast` query marker so the
+  destination page can show the success toast after App Router navigation.
 - Intermittent Neon connection timeouts can still slow or fail individual local
   route loads. Overview now degrades when a workspace query fails, but public
   booking routes still depend on database reads and should be retried when Neon
@@ -68,13 +125,20 @@ Committed checkpoint:
 
 Next checkpoint:
 
-- Start Phase 6: Onboarding.
-- Keep the existing App Shell and Storefront visual model. Onboarding belongs in
-  the Daylight App Shell, while final launch/share previews may link to the
-  Midnight public booking page.
-- Reuse the current profile, availability, event, and integration behavior where
-  possible. Do not duplicate full forms unless a smaller onboarding-specific
-  component is clearly simpler and writes through the same server actions.
+- QA the full first-run path with a genuinely incomplete account: empty
+  availability, no public active events, and no Google Calendar connection.
+- Re-test Google Calendar OAuth end to end after approving the new direct
+  connection action in the browser. Current manual QA still shows the active
+  account as not connected in Integrations, and Google currently blocks the
+  OAuth app before consent. Resolve the Google OAuth client mismatch first:
+  either configure the `787459168867-...` client with the app's Calendar scopes
+  and `https://included-garfish-63.clerk.accounts.dev/v1/oauth_callback`, or
+  update Clerk to use the `564227907042-...` client that is visible in Google
+  Cloud. The OAuth consent screen must also allow the tester account and
+  requested Calendar scopes before this can pass.
+- Clean up private manual QA events named `Manual QA Event...` after the user
+  explicitly approves deletion. These were created only to verify event-created
+  toast behavior.
 
 ## Product Goal
 

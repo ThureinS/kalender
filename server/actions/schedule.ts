@@ -96,6 +96,8 @@ export async function saveSchedule(
   } finally {
     // Revalidate the /schedule path to update the cache and reflect the new data
     revalidatePath('/schedule')
+    revalidatePath('/onboarding')
+    revalidatePath('/overview')
   }
 }
 

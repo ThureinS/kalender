@@ -16,7 +16,6 @@ import {
 } from "lucide-react"
 import { useForm, useWatch } from "react-hook-form"
 import type { Resolver } from "react-hook-form"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -50,6 +49,7 @@ import { getProfileAccentStyle, PROFILE_ACCENTS } from "@/lib/profileAccent"
 import { slugify } from "@/lib/slugs"
 import { profileFormSchema } from "@/schema/profiles"
 import { updateCurrentUserProfile } from "@/server/actions/profiles"
+import { appToast } from "@/lib/app-toast"
 
 type FormValues = z.infer<typeof profileFormSchema>
 
@@ -114,7 +114,7 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
 
   async function copyPublicUrl() {
     await navigator.clipboard.writeText(publicUrl)
-    toast("Public URL copied.")
+    appToast.success("Public URL copied.")
   }
 
   async function onSubmit(data: FormValues) {
@@ -129,7 +129,7 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
         location: updatedProfile.location ?? "",
         accent: updatedProfile.accent as FormValues["accent"],
       })
-      toast("Booking Page saved.")
+      appToast.success("Booking Page saved.")
     } catch (error: any) {
       const message =
         error?.message ||
@@ -139,6 +139,7 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
       if (message.includes("Link Name")) {
         form.setError("handle", { message })
       }
+      appToast.error("Booking Page was not saved.")
     }
   }
 

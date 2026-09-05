@@ -13,8 +13,9 @@ import { Fragment } from "react"
 import { Button } from "../ui/button"
 import { Plus, X } from "lucide-react"
 import { Input } from "../ui/input"
-import { toast } from "sonner"
 import { saveSchedule } from "@/server/actions/schedule"
+import { useRouter } from "next/navigation"
+import { appToast } from "@/lib/app-toast"
 
 // Define the Availability type
 type Availability = {
@@ -28,12 +29,15 @@ type Availability = {
 
 export function ScheduleForm({
                                  schedule,
+                                 requireAvailability = false,
                              }: {
     schedule?: {
         timezone: string
         availabilities: Availability[]
     }
+    requireAvailability?: boolean
 }) {
+    const router = useRouter()
 
     // Initialize form with validation schema and default values
     const form = useForm<z.infer<typeof scheduleFormSchema>>({
@@ -43,7 +47,7 @@ export function ScheduleForm({
                 schedule?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
             availabilities: schedule?.availabilities.toSorted((a, b) => {
                 return timeToFloat(a.startTime) - timeToFloat(b.startTime)
-            }),
+            }) ?? [],
         },
     })
 
@@ -62,17 +66,23 @@ export function ScheduleForm({
 
     // Submit handler to save schedule
     async function onSubmit(values: z.infer<typeof scheduleFormSchema>) {
+        if (requireAvailability && values.availabilities.length === 0) {
+            form.setError("root", {
+                message: "Add at least one availability window before continuing.",
+            })
+            return
+        }
+
         try {
             await saveSchedule(values)
-            toast("Schedule saved successfully.", {
-                duration: 5000,
-                className: '!rounded-3xl !py-8 !px-5 !justify-center !text-green-400 !font-black',
-            })
+            appToast.success("Schedule saved.")
+            router.refresh()
         } catch (error: any) {
             // Handle any unexpected errors that occur during the schedule saving process
             form.setError("root", {
                 message: `There was an error saving your schedule${error.message}`,
             })
+            appToast.error("Schedule was not saved.")
         }
     }
 

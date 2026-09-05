@@ -151,6 +151,8 @@ export async function updateCurrentUserProfile(
     .returning()
 
   revalidatePath("/booking-page")
+  revalidatePath("/onboarding")
+  revalidatePath("/overview")
   revalidatePath("/events")
   revalidatePath(`/book/${currentProfile.handle}`)
   revalidatePath(`/book/${profile.handle}`)

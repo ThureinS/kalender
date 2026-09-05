@@ -5,7 +5,6 @@ import type { UserProfile } from "@/server/actions/profiles"
 import { CalendarX2, CheckCircle2, Clock3, Copy, Globe2, LinkIcon, MapPin } from "lucide-react"
 import Link from "next/link"
 import { Button } from "./ui/button"
-import { toast } from "sonner"
 import PublicEventCard from "./PublicEventCard"
 import {
   BookingContentColumn,
@@ -13,6 +12,7 @@ import {
   BookingPageSplit,
 } from "./layout/product-surfaces"
 import { getProfileAccentStyle } from "@/lib/profileAccent"
+import { appToast } from "@/lib/app-toast"
 
 // Define types for the props that PublicProfile component will receive
 type PublicProfileProps = {
@@ -42,9 +42,10 @@ type PublicProfileProps = {
   const copyProfileUrl = async () => {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/book/${profile.handle}`)
-      toast("Profile URL copied to clipboard!")
+      appToast.success("Booking Link copied.")
     } catch (error) {
       console.error("Failed to copy URL:", error)
+      appToast.error("Booking Link was not copied.")
     }
   }
 

@@ -4,6 +4,7 @@ import { createEvent, deleteEvent, updateEvent } from "@/server/actions/events"
 import { eventFormSchema } from "@/schema/events"
 import { formatEventDescription } from "@/lib/formatters"
 import { slugify } from "@/lib/slugs"
+import { appToast } from "@/lib/app-toast"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
     CalendarClock,
@@ -38,11 +39,15 @@ import { Input } from "../ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Switch } from "../ui/switch"
 import { Textarea } from "../ui/textarea"
+import { withAppToast } from "../ui/pending-app-toast"
 
 type FormValues = z.infer<typeof eventFormSchema>
 
 type EventFormProps = {
     profileHandle?: string
+    cancelHref?: string
+    returnHref?: string
+    submitLabel?: string
     event?: {
         id: string
         name: string
@@ -70,7 +75,13 @@ function formErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
 }
 
-export default function EventForm({ event, profileHandle }: EventFormProps) {
+export default function EventForm({
+    event,
+    profileHandle,
+    cancelHref = "/events",
+    returnHref = "/events",
+    submitLabel = "Save Event",
+}: EventFormProps) {
     const [isDeletePending, startDeleteTransition] = useTransition()
     const router = useRouter()
 
@@ -118,11 +129,19 @@ export default function EventForm({ event, profileHandle }: EventFormProps) {
 
     async function onSubmit(values: FormValues) {
         const action = event == null ? createEvent : updateEvent.bind(null, event.id)
+        const toastId = appToast.loading(
+            event == null ? "Creating event..." : "Saving event..."
+        )
 
         try {
             await action(values)
-            router.push("/events")
+            appToast.dismiss(toastId)
+            router.push(
+                withAppToast(returnHref, event == null ? "event-created" : "event-saved")
+            )
+            router.refresh()
         } catch (error: unknown) {
+            appToast.error("Event was not saved.", { id: toastId })
             form.setError("root", {
                 message: `There was an error saving your event. ${formErrorMessage(error, "Try again.")}`,
             })
@@ -378,8 +397,10 @@ export default function EventForm({ event, profileHandle }: EventFormProps) {
                                                 startDeleteTransition(async () => {
                                                     try {
                                                         await deleteEvent(event.id)
+                                                        appToast.success("Event deleted.")
                                                         router.push("/events")
                                                     } catch (error: unknown) {
+                                                        appToast.error("Event was not deleted.")
                                                         form.setError("root", {
                                                             message: `There was an error deleting your event. ${formErrorMessage(error, "Try again.")}`,
                                                         })
@@ -400,14 +421,14 @@ export default function EventForm({ event, profileHandle }: EventFormProps) {
                             asChild
                             variant="outline"
                         >
-                            <Link href="/events">Cancel</Link>
+                            <Link href={cancelHref}>Cancel</Link>
                         </Button>
 
                         <Button
                             disabled={isDeletePending || form.formState.isSubmitting}
                             type="submit"
                         >
-                            {form.formState.isSubmitting ? "Saving..." : "Save Event"}
+                            {form.formState.isSubmitting ? "Saving..." : submitLabel}
                         </Button>
                     </div>
                 </div>

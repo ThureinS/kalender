@@ -41,7 +41,7 @@ export function BookingPageSplit({ children, className }: SurfaceProps) {
   return (
     <div
       className={cn(
-        "mx-auto grid min-h-dvh w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:px-8 lg:py-12",
+        "mx-auto grid min-h-dvh w-full max-w-6xl gap-6 px-4 py-8 sm:px-6 md:grid-cols-[280px_minmax(0,1fr)] lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-8 lg:px-8 lg:py-12",
         className
       )}
     >
@@ -54,7 +54,7 @@ export function BookingIdentityRail({ children, className }: SurfaceProps) {
   return (
     <aside
       className={cn(
-        "rounded-lg border border-border/80 bg-storefront-rail p-5 lg:sticky lg:top-8 lg:self-start",
+        "rounded-lg border border-border/80 bg-storefront-rail p-5 md:sticky md:top-8 md:self-start",
         className
       )}
     >

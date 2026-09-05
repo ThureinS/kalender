@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Toaster } from "sonner";
+import { PendingAppToast } from "@/components/ui/pending-app-toast";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
     title: "Kalender",
@@ -20,6 +21,7 @@ export default function RootLayout({
                 className="antialiased animate-fade-in"
             >
             {children}
+            <PendingAppToast />
             <Toaster />
             </body>
             </html>

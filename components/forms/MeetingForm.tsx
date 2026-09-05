@@ -99,6 +99,12 @@ export default function MeetingForm({
     const timezone = form.watch("timezone")
     const date = form.watch("date")
     const startTime = form.watch("startTime")
+    const guestName = form.watch("guestName")
+    const guestEmail = form.watch("guestEmail")
+    const canSubmit =
+      Boolean(startTime) &&
+      guestName.trim().length > 0 &&
+      z.string().email().safeParse(guestEmail).success
 
         // Convert valid times to the selected timezone
     const validTimesInTimezone = useMemo(() => {
@@ -386,7 +392,7 @@ export default function MeetingForm({
                     <Link href={`/book/${profileHandle}`}>Cancel</Link>
                   </Button>
                   <Button
-                    disabled={form.formState.isSubmitting || !startTime}
+                    disabled={form.formState.isSubmitting || !canSubmit}
                     type="submit"
                   >
                     Confirm booking

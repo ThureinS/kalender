@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { DAYS_OF_WEEK_IN_ORDER } from "@/constants"
+import { getSetupReadiness, hasGoogleCalendarScopes } from "@/lib/setup-readiness"
 import { getEvents } from "@/server/actions/events"
 import { getOrCreateProfile } from "@/server/actions/profiles"
 import { getSchedule } from "@/server/actions/schedule"
@@ -173,27 +174,32 @@ export default async function OverviewPage() {
   const eventsLoadFailed = eventsResult.status === "rejected"
   const scheduleLoadFailed = scheduleResult.status === "rejected"
 
-  const availabilityDays = new Set(
-    schedule?.availabilities?.map(availability => availability.dayOfWeek)
-  )
   const connectedGoogleAccount = user?.externalAccounts.find(
     account => account.provider === "google"
   )
-  const publicEvents = events.filter(
-    event => event.isActive && event.visibility === "public"
+  const hasCalendarScopes = hasGoogleCalendarScopes(connectedGoogleAccount)
+  const readiness = getSetupReadiness({
+    profile,
+    schedule,
+    events,
+    googleAccount: connectedGoogleAccount,
+  })
+  const publicEvents = readiness.publicActiveEvents
+  const availabilityDays = new Set(
+    schedule?.availabilities?.map(availability => availability.dayOfWeek)
   )
   const setupItems = [
     {
-      complete: !profileLoadFailed && Boolean(profile.displayName && profile.handle),
+      complete: !profileLoadFailed && readiness.profileIdentity,
       title: "Booking Page identity",
       description: profileLoadFailed
         ? "Booking Page details are temporarily unavailable."
         : `${profile.displayName} has a Public URL ready at /book/${profile.handle}.`,
-      href: "/booking-page",
+      href: "/onboarding#identity",
       actionLabel: "Edit page",
     },
     {
-      complete: !scheduleLoadFailed && availabilityDays.size > 0,
+      complete: !scheduleLoadFailed && readiness.availability,
       title: "Weekly availability",
       description:
         scheduleLoadFailed
@@ -202,11 +208,11 @@ export default async function OverviewPage() {
         availabilityDays.size > 0
           ? `${availabilityDays.size} day${availabilityDays.size === 1 ? "" : "s"} configured.`
           : "Add the weekly windows people can book.",
-      href: "/schedule",
+      href: "/onboarding#availability",
       actionLabel: "Set hours",
     },
     {
-      complete: !eventsLoadFailed && publicEvents.length > 0,
+      complete: !eventsLoadFailed && readiness.publicEvent,
       title: "Bookable events",
       description:
         eventsLoadFailed
@@ -215,22 +221,25 @@ export default async function OverviewPage() {
         publicEvents.length > 0
           ? `${publicEvents.length} public event${publicEvents.length === 1 ? "" : "s"} visible.`
           : "Create a public event so visitors have something to book.",
-      href: "/events",
+      href: "/onboarding#event",
       actionLabel: "Review events",
     },
     {
-      complete: Boolean(connectedGoogleAccount),
+      complete: readiness.googleCalendar,
       title: "Google Calendar",
-      description: connectedGoogleAccount
-        ? `Connected as ${connectedGoogleAccount.emailAddress}.`
+      description: hasCalendarScopes
+        ? `Connected as ${connectedGoogleAccount?.emailAddress}.`
+        : connectedGoogleAccount
+          ? "Google is connected, but Kalender still needs Calendar access."
         : "Connect Google so Kalender can check conflicts and create calendar events.",
-      href: "/integrations",
-      actionLabel: "Connect",
+      href: "/onboarding#calendar",
+      actionLabel: connectedGoogleAccount ? "Grant access" : "Connect",
     },
   ]
   const completedSetupItems = setupItems.filter(item => item.complete).length
   const nextSetupItem = setupItems.find(item => !item.complete)
   const visibleDays = DAYS_OF_WEEK_IN_ORDER.filter(day => availabilityDays.has(day))
+  const publicUrlReady = !dataLoadFailed && readiness.readyToShare
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
@@ -239,7 +248,7 @@ export default async function OverviewPage() {
         title="Overview"
         description="See whether your scheduling workspace is ready to share and jump into the next useful task."
         action={
-          profile.handle ? (
+          publicUrlReady && profile.handle ? (
             <Button asChild>
               <Link href={`/book/${profile.handle}`} target="_blank">
                 <ExternalLink className="size-4" />
@@ -247,9 +256,11 @@ export default async function OverviewPage() {
               </Link>
             </Button>
           ) : (
-            <Button disabled>
-              <ExternalLink className="size-4" />
-              Open Public URL
+            <Button asChild>
+              <Link href={nextSetupItem?.href ?? "/onboarding"}>
+                <ArrowRight className="size-4" />
+                Continue Onboarding
+              </Link>
             </Button>
           )
         }

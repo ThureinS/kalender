@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "./ui/button"
 import { cn } from "@/lib/utils"
 import { CopyIcon } from "lucide-react"
 import { useState } from "react"
-import { toast } from "sonner"
+import { appToast } from "@/lib/app-toast"
 
 
 // Define the possible visual states for the copy action
@@ -54,13 +54,12 @@ export function CopyEventButton({
           .writeText(url) // Try to copy the URL
           .then(() => {
             setCopyState("copied") // On success, show "Copied!" state
-            toast("Link copied successfully.", {
-              duration: 3000
-            })
+            appToast.success("Link copied.")
             setTimeout(() => setCopyState("idle"), 2000) // Reset after 2 seconds
           })
           .catch(() => {
             setCopyState("error") // On failure, show "Error" state
+            appToast.error("Link was not copied.")
             setTimeout(() => setCopyState("idle"), 2000) // Reset after 2 seconds
           })
       }

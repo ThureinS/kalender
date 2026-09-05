@@ -73,6 +73,8 @@ export async function createEvent(
       
        // Revalidate the '/events' path to ensure the page fetches fresh data after the database operation
        revalidatePath('/events')
+       revalidatePath('/onboarding')
+       revalidatePath('/overview')
 
     }
   }
@@ -114,6 +116,8 @@ export async function updateEvent(
     } finally {
       // Revalidate the '/events' path to ensure the page fetches fresh data after the database operation
       revalidatePath('/events')
+      revalidatePath('/onboarding')
+      revalidatePath('/overview')
     }
 
 
@@ -149,6 +153,8 @@ export async function updateEvent(
       } finally {
         // Revalidate the '/events' path to ensure the page fetches fresh data after the database operation
         revalidatePath('/events')
+        revalidatePath('/onboarding')
+        revalidatePath('/overview')
       }
     }
 
