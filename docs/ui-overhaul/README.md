@@ -166,6 +166,13 @@ Committed checkpoint:
   then showed `1 active event` and `/book/aaddition966/first-run-qa-call`
   rendered live availability and a disabled confirmation action until booking
   details are present. No real booking was submitted.
+- Completing the same September 7 first-run QA, Google Calendar was connected
+  for `aaddition966@gmail.com`. `/integrations` showed approved
+  `calendar.events` and `calendar.events.freebusy` scopes, `/overview`
+  advanced to setup `4/4`, `/onboarding` advanced to progress `5/5`, and Launch
+  copy/share became enabled. Public booking and event detail pages still
+  rendered correctly after the Calendar connection. No real booking was
+  submitted.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -179,12 +186,14 @@ Committed checkpoint:
 
 Next checkpoint:
 
-- Finish the September 7 first-run QA by connecting Google Calendar for the new
-  `/book/aaddition966` account. If the selected Google account is not already
-  listed under Google Auth Platform Audience/Test users, add it there first.
-- `khanauthone123@gmail.com` is not a clean candidate for first-run QA because
-  it already has Booking Page identity, saved availability, and a public active
-  `Discovery Call`; it only lacks Calendar scopes.
+- Decide production OAuth posture: keep the app as a portfolio/demo running in
+  Google Testing with explicit test users, or prepare for Google OAuth
+  verification before inviting arbitrary external users.
+- Decide whether Bookings should remain an honest Google Calendar-only empty
+  state for now, or whether the product should add a local bookings/history
+  table.
+- Choose the production deployment domain and Clerk production instance before
+  finalizing production Google OAuth redirect URIs.
 
 ## Product Goal
 
