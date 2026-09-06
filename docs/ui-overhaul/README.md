@@ -153,6 +153,19 @@ Committed checkpoint:
   `npm run build`.
 - The four private manual QA events named `Manual QA Event...` were deleted
   after explicit user approval on September 6, 2026.
+- On September 7, 2026, first-run QA was retested with a newly signed-up
+  account at `/book/aaddition966`. The initial state correctly showed
+  `/overview` setup `1/4`, `/onboarding` progress `1/5`, no saved
+  availability, no public active events, no Google Calendar connection, Launch
+  copy/share disabled, and the public Booking Page showing `0 active events`,
+  `Availability not set`, and `No bookable events yet`.
+- Continuing the same September 7 first-run QA, adding one Monday availability
+  window advanced `/onboarding` to `2/5`. Creating a public `First Run QA Call`
+  event advanced `/onboarding` to `3/5` and `/overview` to `3/4`, with Google
+  Calendar correctly remaining the next incomplete setup item. The public page
+  then showed `1 active event` and `/book/aaddition966/first-run-qa-call`
+  rendered live availability and a disabled confirmation action until booking
+  details are present. No real booking was submitted.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -166,10 +179,11 @@ Committed checkpoint:
 
 Next checkpoint:
 
-- QA the full first-run path with a genuinely incomplete account: empty
-  availability, no public active events, and no Google Calendar connection.
-  `khanauthone123@gmail.com` is not a clean candidate for this test because it
-  already has Booking Page identity, saved availability, and a public active
+- Finish the September 7 first-run QA by connecting Google Calendar for the new
+  `/book/aaddition966` account. If the selected Google account is not already
+  listed under Google Auth Platform Audience/Test users, add it there first.
+- `khanauthone123@gmail.com` is not a clean candidate for first-run QA because
+  it already has Booking Page identity, saved availability, and a public active
   `Discovery Call`; it only lacks Calendar scopes.
 
 ## Product Goal
