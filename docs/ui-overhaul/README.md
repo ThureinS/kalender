@@ -173,6 +173,17 @@ Committed checkpoint:
   copy/share became enabled. Public booking and event detail pages still
   rendered correctly after the Calendar connection. No real booking was
   submitted.
+- On September 7, 2026, Google OAuth verification was explicitly deferred. For
+  the portfolio/demo milestone, Kalender will stay in Google Testing mode with
+  explicit demo/test users. Arbitrary external Google users remain out of scope
+  until a later production verification phase with public policy docs, verified
+  domain ownership, and Google review materials.
+- On September 7, 2026, production deployment setup was deferred until a later
+  session. The production domain and Clerk production instance still need to be
+  chosen before final production Google OAuth redirect URIs are configured.
+- On September 7, 2026, local bookings/history was deferred to a new session.
+  The current `/bookings` page remains an honest Google Calendar-only state for
+  this milestone.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -186,14 +197,10 @@ Committed checkpoint:
 
 Next checkpoint:
 
-- Decide production OAuth posture: keep the app as a portfolio/demo running in
-  Google Testing with explicit test users, or prepare for Google OAuth
-  verification before inviting arbitrary external users.
-- Decide whether Bookings should remain an honest Google Calendar-only empty
-  state for now, or whether the product should add a local bookings/history
-  table.
-- Choose the production deployment domain and Clerk production instance before
-  finalizing production Google OAuth redirect URIs.
+- Start the next feature session for local bookings/history if that becomes the
+  chosen next phase.
+- When deployment resumes, choose the production domain and Clerk production
+  instance before finalizing production Google OAuth redirect URIs.
 
 ## Product Goal
 
