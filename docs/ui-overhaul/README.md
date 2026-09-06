@@ -24,8 +24,9 @@ Current foundation state:
   Bookings, Booking Page, Integrations, and Settings.
 - Signed-in entry points land on `/overview`; `/events`, `/schedule`, and
   `/booking-page` remain functional.
-- Bookings currently uses an honest empty state because confirmed meetings are
-  created in Google Calendar and are not persisted in a local bookings table.
+- Confirmed public bookings are persisted in Kalender after Google Calendar
+  event creation succeeds. `/bookings` now reads the local bookings table for
+  upcoming and past booking history.
 - Integrations is scoped to Google Calendar.
 - Event Types now use the agreed core editor fields: Title, Link Name,
   Description, Duration, Location, Visibility, and Buffer Time.
@@ -181,9 +182,23 @@ Committed checkpoint:
 - On September 7, 2026, production deployment setup was deferred until a later
   session. The production domain and Clerk production instance still need to be
   chosen before final production Google OAuth redirect URIs are configured.
-- On September 7, 2026, local bookings/history was deferred to a new session.
-  The current `/bookings` page remains an honest Google Calendar-only state for
-  this milestone.
+- Earlier on September 7, 2026, local bookings/history was deferred from the
+  onboarding/OAuth QA checkpoint and selected as the next feature phase.
+- On September 7, 2026, the local bookings/history feature phase added a
+  forward-only `bookings` table with confirmed/canceled status, event snapshots,
+  guest details, timezone, UTC start/end timestamps, and Google Calendar event
+  metadata. Successful public booking submissions still create the Google
+  Calendar event first, then persist the confirmed booking locally for Kalender
+  history.
+- The same September 7 local bookings/history phase updated `/bookings` to show
+  real stored booking counts, upcoming bookings, past bookings, guest contact
+  details, event snapshots, duration, timezone, and a Google event link when one
+  is available. Accounts with no local bookings now show a truthful empty state
+  for the new persisted model.
+- Local bookings/history validation on September 7, 2026 passed with
+  `npx tsc --noEmit` and `npm run build`. No real booking was submitted during
+  this implementation pass; action-time approval is still required before a
+  manual test booking is created.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -197,8 +212,9 @@ Committed checkpoint:
 
 Next checkpoint:
 
-- Start the next feature session for local bookings/history if that becomes the
-  chosen next phase.
+- If local booking persistence needs browser QA, get explicit approval before
+  submitting a real test booking, verify that it appears in `/bookings`, and ask
+  again before deleting or modifying any created booking/test data.
 - When deployment resumes, choose the production domain and Clerk production
   instance before finalizing production Google OAuth redirect URIs.
 

@@ -6,6 +6,8 @@ import { fromZonedTime } from "date-fns-tz";
 import { getValidTimesFromSchedule } from "./schedule";
 import { createCalendarEvent } from "../google/googleCalendar";
 import { z } from "zod";
+import { createConfirmedBooking } from "./bookings";
+import { revalidatePath } from "next/cache";
 
 //Server action to create a meeting
 export async function createMeeting(
@@ -49,14 +51,38 @@ export async function createMeeting(
     }
 
     // Create the Google Calendar event with all necessary details
-    await createCalendarEvent({
+    const calendarEvent = await createCalendarEvent({
       ...data, // guest info, timezone, etc.
       startTime: startInTimezone, // adjusted to the right timezone
       durationInMinutes: event.durationInMinutes, // use duration from the event
       eventName: event.name, // use event name from DB
       eventLocation: event.location,
     });
-    return {clerkUserId: data.clerkUserId, eventId : data.eventId, startTime: data.startTime}
+
+    const booking = await createConfirmedBooking({
+      clerkUserId: data.clerkUserId,
+      eventId: data.eventId,
+      eventName: event.name,
+      eventSlug: event.slug,
+      eventDurationInMinutes: event.durationInMinutes,
+      eventLocation: event.location,
+      guestName: data.guestName,
+      guestEmail: data.guestEmail,
+      guestNotes: data.guestNotes,
+      timezone: data.timezone,
+      startTime: startInTimezone,
+      googleCalendarEventId: calendarEvent.id,
+      googleCalendarHtmlLink: calendarEvent.htmlLink,
+    })
+
+    revalidatePath("/bookings")
+
+    return {
+      clerkUserId: data.clerkUserId,
+      eventId: data.eventId,
+      bookingId: booking.id,
+      startTime: data.startTime,
+    }
   } catch (error: any) {
     // Log the error message (or handle it based on your need)
     console.error(`Error creating meeting: ${error.message || error}`);

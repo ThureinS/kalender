@@ -13,6 +13,7 @@ const updatedAt = timestamp("updatedAt")
   .$onUpdate(() => new Date()) // automatically updates to current time on update
 
 export const eventVisibilityEnum = pgEnum("eventVisibility", ["public", "private"])
+export const bookingStatusEnum = pgEnum("bookingStatus", ["confirmed", "canceled"])
 
 export const UserProfileTable = pgTable(
   "userProfiles",
@@ -64,6 +65,36 @@ export const EventTable = pgTable(
         index("clerkUserIdIndex").on(table.clerkUserId),// index on clerkUserId for faster querying
         uniqueIndex("eventsClerkUserIdSlugUnique").on(table.clerkUserId, table.slug),
       ])
+)
+
+export const BookingTable = pgTable(
+  "bookings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clerkUserId: text("clerkUserId").notNull(),
+    eventId: uuid("eventId").references(() => EventTable.id, {
+      onDelete: "set null",
+    }),
+    eventName: text("eventName").notNull(),
+    eventSlug: text("eventSlug"),
+    eventDurationInMinutes: integer("eventDurationInMinutes").notNull(),
+    eventLocation: text("eventLocation"),
+    guestName: text("guestName").notNull(),
+    guestEmail: text("guestEmail").notNull(),
+    guestNotes: text("guestNotes"),
+    timezone: text("timezone").notNull(),
+    startTime: timestamp("startTime").notNull(),
+    endTime: timestamp("endTime").notNull(),
+    googleCalendarEventId: text("googleCalendarEventId"),
+    googleCalendarHtmlLink: text("googleCalendarHtmlLink"),
+    status: bookingStatusEnum("status").notNull().default("confirmed"),
+    createdAt,
+    updatedAt,
+  },
+  table => ([
+    index("bookingsClerkUserIdStartTimeIndex").on(table.clerkUserId, table.startTime),
+    index("bookingsEventIdIndex").on(table.eventId),
+  ])
 )
 
 // Define the "schedules" table, one per user, with timezone and timestamps
