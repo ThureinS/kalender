@@ -8,7 +8,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { DAYS_OF_WEEK_IN_ORDER } from "@/constants"
-import { getSetupReadiness, hasGoogleCalendarScopes } from "@/lib/setup-readiness"
+import {
+  getSetupReadiness,
+  hasGoogleCalendarScopes,
+  isGoogleConnection,
+} from "@/lib/setup-readiness"
 import { getEvents } from "@/server/actions/events"
 import { getOrCreateProfile } from "@/server/actions/profiles"
 import { getSchedule } from "@/server/actions/schedule"
@@ -175,7 +179,7 @@ export default async function OverviewPage() {
   const scheduleLoadFailed = scheduleResult.status === "rejected"
 
   const connectedGoogleAccount = user?.externalAccounts.find(
-    account => account.provider === "google"
+    account => isGoogleConnection(account)
   )
   const hasCalendarScopes = hasGoogleCalendarScopes(connectedGoogleAccount)
   const readiness = getSetupReadiness({

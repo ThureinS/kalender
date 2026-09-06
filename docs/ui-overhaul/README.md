@@ -112,6 +112,47 @@ Committed checkpoint:
   showed a `skilled-wombat-27.clerk.accounts.dev` callback. The next session
   should either find/edit the `787459168867-...` OAuth client, or update Clerk's
   Google social connection to use the currently edited Google client id/secret.
+- On September 6, 2026, Integrations QA found a local Clerk provider-shape bug:
+  Clerk returns connected Google external accounts as `oauth_google`, while the
+  UI was checking for `google`. Overview, Onboarding, Integrations, and the
+  direct connect button now share a provider helper that accepts both values.
+  Google Calendar readiness now also requires both Calendar scopes exactly:
+  `calendar.events` and `calendar.events.freebusy`.
+- On September 6, 2026, Google Calendar reauthorization was retested from
+  `/integrations` after the provider fix. Kalender correctly showed the active
+  account as connected but needing Calendar access, then reached Google's
+  blocked-app screen again. The blocked URL still used client id
+  `787459168867-0v2orf3qo56uocsi84iroseoahhuovdm.apps.googleusercontent.com`,
+  confirming the remaining blocker is external OAuth configuration.
+- A follow-up Chrome retest on September 6, 2026 showed the local Kalender
+  sign-in flow also using client id
+  `787459168867-0v2orf3qo56uocsi84iroseoahhuovdm.apps.googleusercontent.com`
+  with redirect URI `https://clerk.shared.lcl.dev/v1/oauth_callback`. That is
+  consistent with Clerk's shared development Google OAuth credentials still
+  being active for this instance, not the visible Google Cloud client
+  `564227907042-ojcqbuimvlb360o2dvju5vlr11obn79q.apps.googleusercontent.com`.
+- After updating and saving Clerk's Google custom credentials on September 6,
+  2026, the live Chrome OAuth URL correctly used client id
+  `564227907042-ojcqbuimvlb360o2dvju5vlr11obn79q.apps.googleusercontent.com`,
+  redirect URI `https://included-garfish-63.clerk.accounts.dev/v1/oauth_callback`,
+  and both Calendar scopes. Google then returned
+  `Error 403: access_denied` because the app is still in Testing and
+  `accutility778@gmail.com` is not an approved tester.
+- After adding `accutility778@gmail.com` as a Google OAuth test user on
+  September 6, 2026, the Google Calendar OAuth flow completed successfully.
+  `/integrations` now shows Google Calendar connected as
+  `accutility778@gmail.com` with approved `calendar.events` and
+  `calendar.events.freebusy` scopes.
+- Final supervised QA on September 6, 2026 confirmed `/overview` now reports
+  setup `4/4`, `/onboarding` reports progress `5/5`, `/book/utility-acc`
+  renders the public profile with the active `Testing` event, and
+  `/book/utility-acc/testing` renders live availability, enabled slots, and a
+  disabled confirmation action until booking details are present. No real
+  booking was submitted.
+- Final validation on September 6, 2026 passed with `npx tsc --noEmit` and
+  `npm run build`.
+- The four private manual QA events named `Manual QA Event...` were deleted
+  after explicit user approval on September 6, 2026.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -127,18 +168,9 @@ Next checkpoint:
 
 - QA the full first-run path with a genuinely incomplete account: empty
   availability, no public active events, and no Google Calendar connection.
-- Re-test Google Calendar OAuth end to end after approving the new direct
-  connection action in the browser. Current manual QA still shows the active
-  account as not connected in Integrations, and Google currently blocks the
-  OAuth app before consent. Resolve the Google OAuth client mismatch first:
-  either configure the `787459168867-...` client with the app's Calendar scopes
-  and `https://included-garfish-63.clerk.accounts.dev/v1/oauth_callback`, or
-  update Clerk to use the `564227907042-...` client that is visible in Google
-  Cloud. The OAuth consent screen must also allow the tester account and
-  requested Calendar scopes before this can pass.
-- Clean up private manual QA events named `Manual QA Event...` after the user
-  explicitly approves deletion. These were created only to verify event-created
-  toast behavior.
+  `khanauthone123@gmail.com` is not a clean candidate for this test because it
+  already has Booking Page identity, saved availability, and a public active
+  `Discovery Call`; it only lacks Calendar scopes.
 
 ## Product Goal
 

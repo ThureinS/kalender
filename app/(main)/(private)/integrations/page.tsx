@@ -16,7 +16,10 @@ import {
   RefreshCw,
   ShieldCheck,
 } from "lucide-react"
-import { hasGoogleCalendarScopes } from "@/lib/setup-readiness"
+import {
+  hasGoogleCalendarScopes,
+  isGoogleConnection,
+} from "@/lib/setup-readiness"
 
 export default async function IntegrationsPage() {
   const { userId, redirectToSignIn } = await auth()
@@ -24,7 +27,7 @@ export default async function IntegrationsPage() {
 
   const user = await currentUser()
   const googleAccount = user?.externalAccounts.find(
-    account => account.provider === "google"
+    account => isGoogleConnection(account)
   )
   const approvedScopes = googleAccount?.approvedScopes.split(" ").filter(Boolean)
   const hasCalendarScopes = hasGoogleCalendarScopes(googleAccount)

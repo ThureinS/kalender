@@ -6,11 +6,10 @@ import { useClerk, useUser } from "@clerk/nextjs"
 
 import { Button } from "@/components/ui/button"
 import { appToast } from "@/lib/app-toast"
-
-const calendarScopes = [
-  "https://www.googleapis.com/auth/calendar.events",
-  "https://www.googleapis.com/auth/calendar.events.freebusy",
-]
+import {
+  isGoogleConnection,
+  requiredGoogleCalendarScopes,
+} from "@/lib/setup-readiness"
 
 type GoogleCalendarConnectButtonProps = {
   connected: boolean
@@ -18,7 +17,9 @@ type GoogleCalendarConnectButtonProps = {
 }
 
 function hasGoogleCalendarScope(approvedScopes: string) {
-  return calendarScopes.some(scope => approvedScopes.includes(scope))
+  const scopes = approvedScopes.split(" ")
+
+  return requiredGoogleCalendarScopes.every(scope => scopes.includes(scope))
 }
 
 export function GoogleCalendarConnectButton({
@@ -37,7 +38,7 @@ export function GoogleCalendarConnectButton({
 
     const redirectUrl = `${window.location.origin}/sso-callback?redirect_url=${encodeURIComponent("/onboarding#calendar")}`
     const googleAccount = user.externalAccounts.find(
-      account => account.provider === "google"
+      account => isGoogleConnection(account)
     )
 
     setIsConnecting(true)
@@ -51,13 +52,13 @@ export function GoogleCalendarConnectButton({
       const externalAccount = googleAccount
         ? await googleAccount.reauthorize({
             redirectUrl,
-            additionalScopes: calendarScopes,
+            additionalScopes: [...requiredGoogleCalendarScopes],
             oidcPrompt: "consent",
           })
         : await user.createExternalAccount({
             strategy: "oauth_google",
             redirectUrl,
-            additionalScopes: calendarScopes,
+            additionalScopes: [...requiredGoogleCalendarScopes],
             oidcPrompt: "consent",
           })
 

@@ -13,14 +13,29 @@ type EventVisibility = {
 }
 
 type GoogleConnection = {
+  provider?: string | null
   approvedScopes?: string | null
 } | null | undefined
 
+export const requiredGoogleCalendarScopes = [
+  "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/calendar.events.freebusy",
+] as const
+
+export function isGoogleConnection(
+  account: { provider?: string | null } | null | undefined
+) {
+  return account?.provider === "google" || account?.provider === "oauth_google"
+}
+
 export function hasGoogleCalendarScopes(googleAccount: GoogleConnection) {
+  const approvedScopes = googleAccount?.approvedScopes?.split(" ") ?? []
+
   return Boolean(
-    googleAccount?.approvedScopes
-      ?.split(" ")
-      .some(scope => scope.includes("googleapis.com/auth/calendar"))
+    approvedScopes.length > 0 &&
+      requiredGoogleCalendarScopes.every(requiredScope =>
+        approvedScopes.includes(requiredScope)
+      )
   )
 }
 
