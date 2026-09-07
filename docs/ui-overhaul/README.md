@@ -5,7 +5,7 @@ meant to make the redesign continuable in small chunks across sessions.
 
 ## Current Status
 
-Phases 1-6 have been implemented in the production codebase.
+Phases 1-7 have been implemented in the production codebase.
 
 Current foundation state:
 
@@ -27,6 +27,9 @@ Current foundation state:
 - Confirmed public bookings are persisted in Kalender after Google Calendar
   event creation succeeds. `/bookings` now reads the local bookings table for
   upcoming and past booking history.
+- Phase 7 added a repeatable demo seed script at `scripts/seed-demo.mjs`, exposed
+  as `npm run db:seed:demo`. It requires an explicit demo Clerk user id and
+  confirmation environment flag before replacing any owner-scoped data.
 - Integrations is scoped to Google Calendar.
 - Event Types now use the agreed core editor fields: Title, Link Name,
   Description, Duration, Location, Visibility, and Buffer Time.
@@ -210,6 +213,22 @@ Committed checkpoint:
   booking was deleted from Google Calendar and from the local `bookings` table.
   A follow-up database check confirmed zero remaining
   `qa-local-booking@example.com` booking rows.
+- On September 7, 2026, Phase 7 demo/seed implementation added
+  `npm run db:seed:demo`. The script seeds one realistic solo-professional
+  profile, three public event types, five weekly availability windows, and eight
+  dynamic booking history rows spanning upcoming, past, canceled, and
+  rescheduled examples. It refuses to run unless `KALENDER_DEMO_CLERK_USER_ID`
+  is provided, `KALENDER_DEMO_SEED_CONFIRM` is exactly `replace-demo-owner`, and
+  the demo handle starts with `demo-`. The seed should be run only against a
+  dedicated Clerk test user because it replaces profile, schedule, events, and
+  bookings for that owner id.
+- Phase 7 validation on September 7, 2026 confirmed `node scripts/seed-demo.mjs
+  --help`, default safety refusal, missing-confirmation safety refusal,
+  `node --check scripts/seed-demo.mjs`, `npx tsc --noEmit`, and
+  `npm run build`. The `rescheduled` booking status migration was applied to the
+  Neon development database. The seed script was not run against a live account
+  during implementation because that would intentionally replace owner-scoped
+  demo data.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -223,8 +242,11 @@ Committed checkpoint:
 
 Next checkpoint:
 
-- Phase 7 demo/seed data remains the next revamp phase if portfolio review data
-  is the priority.
+- Phase 8 landing page remains the next revamp phase if the app experience is
+  ready enough for portfolio presentation.
+- Run Phase 7 browser QA only after choosing a dedicated Clerk demo/test user
+  that can safely receive replacement profile, schedule, event, and booking
+  data.
 - When deployment resumes, choose the production domain and Clerk production
   instance before finalizing production Google OAuth redirect URIs.
 

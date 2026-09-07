@@ -13,7 +13,11 @@ const updatedAt = timestamp("updatedAt")
   .$onUpdate(() => new Date()) // automatically updates to current time on update
 
 export const eventVisibilityEnum = pgEnum("eventVisibility", ["public", "private"])
-export const bookingStatusEnum = pgEnum("bookingStatus", ["confirmed", "canceled"])
+export const bookingStatusEnum = pgEnum("bookingStatus", [
+  "confirmed",
+  "canceled",
+  "rescheduled",
+])
 
 export const UserProfileTable = pgTable(
   "userProfiles",
