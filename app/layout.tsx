@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
     title: "Kalender",
-    description: "Kalender is a simple and efficient calendar app that helps you manage your events, meetings, and schedules with ease. Stay organized and never miss an important date again!",
+    description: "Kalender helps solo professionals publish booking pages, event links, availability, and meeting history.",
 };
 
 export default function RootLayout({

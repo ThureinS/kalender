@@ -1,5 +1,6 @@
-'use client'
+"use client"
 
+import { useAuth } from "@clerk/nextjs"
 import type { PublicEvent } from "@/server/actions/events"
 import type { UserProfile } from "@/server/actions/profiles"
 import { CalendarX2, CheckCircle2, Clock3, Copy, Globe2, LinkIcon, MapPin } from "lucide-react"
@@ -16,27 +17,26 @@ import { appToast } from "@/lib/app-toast"
 
 // Define types for the props that PublicProfile component will receive
 type PublicProfileProps = {
-    profile: UserProfile
-    events: PublicEvent[]
-    hasAvailability: boolean
-    isOwner?: boolean
-  }
+  profile: UserProfile
+  events: PublicEvent[]
+  hasAvailability: boolean
+}
 
+export default function PublicProfile({
+  profile,
+  events,
+  hasAvailability,
+}: PublicProfileProps) {
+  const { isLoaded, userId } = useAuth()
+  const isOwner = isLoaded && userId === profile.clerkUserId
 
-  export default function PublicProfile({
-    profile,
-    events,
-    hasAvailability,
-    isOwner = false,
-  }: PublicProfileProps) {
-
-    const displayName = profile.displayName || "Kalender host"
-    const initials = displayName
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map(part => part[0]?.toUpperCase())
-      .join("") || "K"
+  const displayName = profile.displayName || "Kalender host"
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join("") || "K"
 
 
   const copyProfileUrl = async () => {

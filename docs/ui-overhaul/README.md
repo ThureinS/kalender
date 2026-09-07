@@ -5,7 +5,7 @@ meant to make the redesign continuable in small chunks across sessions.
 
 ## Current Status
 
-Phases 1-7 have been implemented in the production codebase.
+Phases 1-8 have been implemented in the production codebase.
 
 Current foundation state:
 
@@ -30,6 +30,18 @@ Current foundation state:
 - Phase 7 added a repeatable demo seed script at `scripts/seed-demo.mjs`, exposed
   as `npm run db:seed:demo`. It requires an explicit demo Clerk user id and
   confirmation environment flag before replacing any owner-scoped data.
+- Phase 8 replaced the legacy embedded-sign-in homepage with a portfolio-ready
+  public landing page built on the Midnight/Daylight/Lime product identity.
+  The first viewport now presents Kalender as a scheduling product with
+  booking-page, event-link, availability, and booking-history signals.
+- The Phase 8 landing page uses static product previews that mirror the current
+  public Booking Page and private Workspace surfaces instead of decorative
+  marketing filler.
+- Landing page CTAs connect to `/register`, `/login`, and the seeded public demo
+  profile at `/book/demo-strategy-studio`.
+- Public nested booking routes now avoid server-side Clerk identity checks for
+  visitor rendering. Owner-only public-page conveniences use client-side Clerk
+  state, while private routes remain protected by middleware.
 - Integrations is scoped to Google Calendar.
 - Event Types now use the agreed core editor fields: Title, Link Name,
   Description, Duration, Location, Visibility, and Buffer Time.
@@ -239,6 +251,16 @@ Committed checkpoint:
   events, and `/book/demo-strategy-studio/strategy-sprint` rendered live
   availability with the confirmation action disabled until visitor details are
   present. No additional real booking was submitted during Phase 7 seed QA.
+- On September 7, 2026, Phase 8 landing page implementation replaced the legacy
+  root page with a responsive public storefront. Browser QA on port 3004
+  confirmed the desktop first viewport shows Kalender as a scheduling product,
+  primary CTAs, and a public booking-page preview; mobile QA at 390px confirmed
+  no horizontal page overflow, visible primary/demo CTAs, readable text, and a
+  stacked product preview. The demo profile CTA route
+  `/book/demo-strategy-studio` rendered the seeded Avery Stone profile and three
+  events. No booking was submitted.
+- Phase 8 validation on September 7, 2026 passed with `npx tsc --noEmit` and
+  `npm run build`.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -252,12 +274,13 @@ Committed checkpoint:
 
 Next checkpoint:
 
-- Phase 8 landing page remains the next revamp phase if the app experience is
-  ready enough for portfolio presentation.
+- Phase 8 landing page is implemented and ready for local portfolio demo use.
 - The seeded demo public profile is available at `/book/demo-strategy-studio`
   while the development database keeps the Phase 7 seed data.
 - When deployment resumes, choose the production domain and Clerk production
   instance before finalizing production Google OAuth redirect URIs.
+- Production deployment, custom domain, Clerk production setup, and Google OAuth
+  verification remain deferred.
 
 ## Product Goal
 
@@ -751,20 +774,24 @@ Done when:
 
 ### Phase 8. Landing Page
 
-Goal: decide and implement the public marketing surface after visual comparison.
+Goal: implement a portfolio-ready public surface that makes the scheduling
+product immediately understandable.
 
 Work chunks:
 
-1. Build visual demos for deferred Q15.
-2. Choose direction.
-3. Implement the landing page.
-4. Show product screenshots/previews from the actual UI direction.
-5. Connect CTAs to sign-up/login.
+1. Build a Midnight storefront homepage using the existing identity.
+2. Make the first viewport show Kalender as a scheduling product.
+3. Show product previews from the current public Booking Page and private
+   Workspace direction.
+4. Connect CTAs to sign-up, login, and the seeded demo profile.
+5. Keep deployment, custom domain, Clerk production setup, and Google
+   verification deferred.
 
 Done when:
 
 - The landing page makes the product immediately understandable.
 - It supports the portfolio goal without becoming a decorative-only page.
+- Desktop and mobile browser QA, typecheck, and production build pass.
 
 ## Quality Bar
 
