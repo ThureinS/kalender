@@ -199,6 +199,13 @@ Committed checkpoint:
   `npx tsc --noEmit` and `npm run build`. No real booking was submitted during
   this implementation pass; action-time approval is still required before a
   manual test booking is created.
+- After explicit action-time approval on September 7, 2026, browser QA
+  submitted one real public test booking for `/book/aaddition966/first-run-qa-call`
+  using `Kalender QA <qa-local-booking@example.com>` and the note
+  `Local booking history QA`. The booking confirmation page rendered for
+  September 7, 2026 at 1:45 PM Asia/Bangkok, and `/bookings` showed Stored
+  Bookings `1`, Upcoming `1`, the event snapshot, guest contact details, note,
+  duration, timezone, and Google event link from the local bookings table.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -212,9 +219,7 @@ Committed checkpoint:
 
 Next checkpoint:
 
-- If local booking persistence needs browser QA, get explicit approval before
-  submitting a real test booking, verify that it appears in `/bookings`, and ask
-  again before deleting or modifying any created booking/test data.
+- Ask before deleting or modifying the September 7 local booking QA test data.
 - When deployment resumes, choose the production domain and Clerk production
   instance before finalizing production Google OAuth redirect URIs.
 
