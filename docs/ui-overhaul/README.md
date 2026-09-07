@@ -206,6 +206,10 @@ Committed checkpoint:
   September 7, 2026 at 1:45 PM Asia/Bangkok, and `/bookings` showed Stored
   Bookings `1`, Upcoming `1`, the event snapshot, guest contact details, note,
   duration, timezone, and Google event link from the local bookings table.
+- After explicit cleanup approval on September 7, 2026, the same real QA
+  booking was deleted from Google Calendar and from the local `bookings` table.
+  A follow-up database check confirmed zero remaining
+  `qa-local-booking@example.com` booking rows.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -219,7 +223,8 @@ Committed checkpoint:
 
 Next checkpoint:
 
-- Ask before deleting or modifying the September 7 local booking QA test data.
+- Phase 7 demo/seed data remains the next revamp phase if portfolio review data
+  is the priority.
 - When deployment resumes, choose the production domain and Clerk production
   instance before finalizing production Google OAuth redirect URIs.
 
