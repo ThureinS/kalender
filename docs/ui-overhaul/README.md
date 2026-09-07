@@ -229,6 +229,16 @@ Committed checkpoint:
   Neon development database. The seed script was not run against a live account
   during implementation because that would intentionally replace owner-scoped
   demo data.
+- After explicit approval on September 7, 2026, Phase 7 seed QA ran against the
+  dedicated test user `accutility778@gmail.com`
+  (`user_3Im9W7uEWVIJYnoULDo0EIvCM23`). The seed completed with handle
+  `demo-strategy-studio`, profile `Avery Stone`, three events, five availability
+  windows, and eight bookings. Database verification showed six confirmed, one
+  canceled, and one rescheduled booking. Browser QA confirmed
+  `/book/demo-strategy-studio` rendered the demo profile with three active
+  events, and `/book/demo-strategy-studio/strategy-sprint` rendered live
+  availability with the confirmation action disabled until visitor details are
+  present. No additional real booking was submitted during Phase 7 seed QA.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -244,9 +254,8 @@ Next checkpoint:
 
 - Phase 8 landing page remains the next revamp phase if the app experience is
   ready enough for portfolio presentation.
-- Run Phase 7 browser QA only after choosing a dedicated Clerk demo/test user
-  that can safely receive replacement profile, schedule, event, and booking
-  data.
+- The seeded demo public profile is available at `/book/demo-strategy-studio`
+  while the development database keeps the Phase 7 seed data.
 - When deployment resumes, choose the production domain and Clerk production
   instance before finalizing production Google OAuth redirect URIs.
 
