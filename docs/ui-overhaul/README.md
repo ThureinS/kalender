@@ -261,6 +261,10 @@ Committed checkpoint:
   events. No booking was submitted.
 - Phase 8 validation on September 7, 2026 passed with `npx tsc --noEmit` and
   `npm run build`.
+- On September 8, 2026, the `/register` and `/login` auth pages were restyled
+  to match the Phase 8 landing page. Both now use a Midnight product-auth shell,
+  scoped Clerk appearance overrides, clear scheduling workspace context, and
+  explicit Clerk path routing/redirect props.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.

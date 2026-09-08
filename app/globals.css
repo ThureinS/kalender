@@ -194,6 +194,74 @@
   font-family: var(--font-display);
 }
 
+.kalender-auth .cl-rootBox,
+.kalender-auth .cl-cardBox {
+  width: 100%;
+  max-width: 100%;
+}
+
+.kalender-auth .cl-cardBox {
+  border: 1px solid color-mix(in oklch, var(--border) 80%, transparent) !important;
+  border-radius: var(--radius) !important;
+  background: var(--card) !important;
+  box-shadow: 0 0 44px -24px var(--primary) !important;
+}
+
+.kalender-auth .cl-card,
+.kalender-auth .cl-footer {
+  background: var(--card) !important;
+}
+
+.kalender-auth .cl-headerTitle,
+.kalender-auth .cl-formHeaderTitle,
+.kalender-auth .cl-formFieldLabel,
+.kalender-auth .cl-identityPreviewText,
+.kalender-auth .cl-userPreviewMainIdentifier {
+  color: var(--foreground) !important;
+}
+
+.kalender-auth .cl-headerSubtitle,
+.kalender-auth .cl-formHeaderSubtitle,
+.kalender-auth .cl-dividerText,
+.kalender-auth .cl-footerActionText,
+.kalender-auth .cl-userPreviewSecondaryIdentifier {
+  color: var(--muted-foreground) !important;
+}
+
+.kalender-auth .cl-dividerLine {
+  background: color-mix(in oklch, var(--border) 80%, transparent) !important;
+}
+
+.kalender-auth .cl-socialButtonsBlockButton,
+.kalender-auth .cl-formFieldInput {
+  border: 1px solid color-mix(in oklch, var(--border) 80%, transparent) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+}
+
+.kalender-auth .cl-formFieldInput::placeholder {
+  color: var(--muted-foreground) !important;
+}
+
+.kalender-auth .cl-formButtonPrimary {
+  border-radius: var(--radius-sm) !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  box-shadow: none !important;
+}
+
+.kalender-auth .cl-footerActionLink,
+.kalender-auth .cl-formResendCodeLink,
+.kalender-auth .cl-footerPagesLink {
+  color: var(--primary) !important;
+}
+
+.kalender-auth .cl-footer {
+  border-top: 1px solid color-mix(in oklch, var(--border) 80%, transparent) !important;
+}
+
 /* ============ Theme Lab (throwaway, /theme-lab) ============ */
 .theme-midnight {
   --radius: 0.75rem;

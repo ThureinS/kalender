@@ -1,16 +1,25 @@
-import Image from "next/image";
-import {SignIn} from "@clerk/nextjs";
+import { SignIn } from "@clerk/nextjs"
+
+import AuthPageShell from "@/components/AuthPageShell"
+import { kalenderClerkAppearance } from "@/lib/clerkAppearance"
 
 const LoginPage = () => {
-    return (
-        <main className="flex flex-col items-center p-5 gap-10 animate-fade-in">
-            <Image src='/assets/logo.svg' alt="Logo" width={100} height={100} />
+  return (
+    <AuthPageShell
+      eyebrow="Welcome back"
+      title="Open your Kalender workspace"
+      description="Sign in to manage event links, availability, Google Calendar, and booking history."
+    >
+      <SignIn
+        appearance={kalenderClerkAppearance}
+        fallbackRedirectUrl="/overview"
+        path="/login"
+        routing="path"
+        signUpFallbackRedirectUrl="/register"
+        signUpUrl="/register"
+      />
+    </AuthPageShell>
+  )
+}
 
-            <div className="mt-3">
-                <SignIn/>
-            </div>
-        </main>
-    );
-};
-
-export default LoginPage;
+export default LoginPage

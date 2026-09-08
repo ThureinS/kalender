@@ -1,16 +1,25 @@
-import Image from "next/image";
-import {SignUp} from "@clerk/nextjs";
+import { SignUp } from "@clerk/nextjs"
+
+import AuthPageShell from "@/components/AuthPageShell"
+import { kalenderClerkAppearance } from "@/lib/clerkAppearance"
 
 const RegisterPage = () => {
-    return (
-        <main className="flex flex-col items-center p-5 gap-10 animate-fade-in">
-            <Image src='/assets/logo.svg' alt="Logo" width={100} height={100} />
+  return (
+    <AuthPageShell
+      eyebrow="Create account"
+      title="Create your scheduling workspace"
+      description="Use Google or email to start setup, then finish your booking page inside onboarding."
+    >
+      <SignUp
+        appearance={kalenderClerkAppearance}
+        fallbackRedirectUrl="/onboarding"
+        path="/register"
+        routing="path"
+        signInFallbackRedirectUrl="/login"
+        signInUrl="/login"
+      />
+    </AuthPageShell>
+  )
+}
 
-            <div className="mt-3">
-                <SignUp/>
-            </div>
-        </main>
-    );
-};
-
-export default RegisterPage;
+export default RegisterPage
