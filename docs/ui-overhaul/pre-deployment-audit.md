@@ -1,5 +1,11 @@
 # Portfolio-demo pre-deployment audit — September 16, 2026
 
+Detailed evidence snapshot, including September 17 follow-up results. The work
+below was subsequently committed as `f810c64`; references to an uncommitted
+working tree describe the state at verification time. For current status and
+next steps, read the short [handoff](README.md). Do not load this entire report
+for routine session startup.
+
 The audit continues the existing `ui-overhaul` working tree. Theme Lab removal
 and earlier documentation changes are preserved. During the September 16 audit,
 nothing was deployed, pushed, seeded, or migrated against Neon. No real invitation

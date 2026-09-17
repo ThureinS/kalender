@@ -6,29 +6,15 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 
 ## Portfolio Demo Status
 
-Kalender's portfolio-demo feature and UI phases are implemented. The temporary
-Theme Lab prototype routes have been removed from the deployment candidate.
+The `ui-overhaul` implementation is committed locally; it has not been deployed.
+The original app is at [kalender-tau.vercel.app](https://kalender-tau.vercel.app/).
+September 17 validation passed: clean install, zero known dependency
+vulnerabilities and the full release check (26 tests).
 
-The original app is already live at [kalender-tau.vercel.app](https://kalender-tau.vercel.app/).
-The `ui-overhaul` audit fixes are in the working tree. On September 17, the
-lockfile was repaired, clean installation passed, the dependency audit reported
-zero known vulnerabilities, and `npm run check` passed all stages (26 tests).
-Before a Vercel preview, resolve public demo credentials versus real-booking
-access and finish configuration and deployment approval. Read the
-[audit report](docs/ui-overhaul/pre-deployment-audit.md) and
-[handoff](docs/ui-overhaul/README.md#current-handoff-state) before continuing.
-The reservation migration has been applied to the development Neon database,
-selected for the preview. Earlier configuration inspection found the existing
-production deployment already shares this database; a separate preview URL
-does not isolate data. Migration presence was independently verified on
-September 17; live booking and browser QA are still pending.
-
-Public demo credentials remain unpublished pending that decision. Sharing an
-allowlisted login shares real Calendar invitation capability. The recommendation
-is separate, disposable, non-allowlisted exploration accounts and private booking
-testers; this has not yet been adopted. Exploration accounts can still edit their
-own workspace, so they must not be the connected Calendar host. See the
-[verified access review](docs/ui-overhaul/pre-deployment-audit.md#public-credentials-versus-real-booking-code-review-september-17).
+Start with the short [current handoff](docs/ui-overhaul/README.md) for next steps,
+shared-database constraints and the unresolved public-demo access decision.
+Detailed [audit evidence](docs/ui-overhaul/pre-deployment-audit.md) is optional
+reading for the relevant task; historical phase notes are archived.
 
 ## 🚀 Tech Stack
 
