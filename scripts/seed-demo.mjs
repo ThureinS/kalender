@@ -223,14 +223,21 @@ const bookings = [
 ]
 
 async function main() {
+  const existingReservations = await sql.query(
+    'select "id" from "bookingReservations" where "clerkUserId" = $1 limit 1', [clerkUserId]
+  )
+  if (existingReservations.length) {
+    throw new Error("Refusing to replace a workspace with booking reservations. Reconcile and clean up its real bookings first.")
+  }
+  const statements = []
   console.log(`Seeding demo workspace for ${clerkUserId} with handle ${handle}.`)
 
-  await sql.query('delete from "bookings" where "clerkUserId" = $1', [clerkUserId])
-  await sql.query('delete from "events" where "clerkUserId" = $1', [clerkUserId])
-  await sql.query('delete from "schedules" where "clerkUserId" = $1', [clerkUserId])
-  await sql.query('delete from "userProfiles" where "clerkUserId" = $1', [clerkUserId])
+  statements.push(sql.query('delete from "bookings" where "clerkUserId" = $1', [clerkUserId]))
+  statements.push(sql.query('delete from "events" where "clerkUserId" = $1', [clerkUserId]))
+  statements.push(sql.query('delete from "schedules" where "clerkUserId" = $1', [clerkUserId]))
+  statements.push(sql.query('delete from "userProfiles" where "clerkUserId" = $1', [clerkUserId]))
 
-  await sql.query(
+  statements.push(sql.query(
     `insert into "userProfiles" (
       "clerkUserId", "handle", "displayName", "avatarUrl", "headline", "bio",
       "timezone", "location", "accent"
@@ -246,13 +253,13 @@ async function main() {
       "Brooklyn, NY",
       "lime",
     ]
-  )
+  ))
 
   const scheduleId = randomUUID()
-  await sql.query(
+  statements.push(sql.query(
     'insert into "schedules" ("id", "timezone", "clerkUserId") values ($1, $2, $3)',
     [scheduleId, "America/New_York", clerkUserId]
-  )
+  ))
 
   const availabilityRows = [
     ["monday", "09:00", "12:00"],
@@ -263,16 +270,16 @@ async function main() {
   ]
 
   for (const [dayOfWeek, startTime, endTime] of availabilityRows) {
-    await sql.query(
+    statements.push(sql.query(
       `insert into "scheduleAvailabilities" (
         "id", "scheduleId", "dayOfWeek", "startTime", "endTime"
       ) values ($1, $2, $3, $4, $5)`,
       [randomUUID(), scheduleId, dayOfWeek, startTime, endTime]
-    )
+    ))
   }
 
   for (const event of events) {
-    await sql.query(
+    statements.push(sql.query(
       `insert into "events" (
         "id", "name", "slug", "description", "durationInMinutes", "location",
         "visibility", "bufferMinutes", "clerkUserId", "isActive"
@@ -289,11 +296,11 @@ async function main() {
         event.clerkUserId,
         event.isActive,
       ]
-    )
+    ))
   }
 
   for (const booking of bookings) {
-    await sql.query(
+    statements.push(sql.query(
       `insert into "bookings" (
         "id", "clerkUserId", "eventId", "eventName", "eventSlug",
         "eventDurationInMinutes", "eventLocation", "guestName", "guestEmail",
@@ -320,8 +327,10 @@ async function main() {
         booking.googleCalendarHtmlLink,
         booking.status,
       ]
-    )
+    ))
   }
+
+  await sql.transaction(statements)
 
   console.log(
     `Seeded ${events.length} events, ${availabilityRows.length} availability windows, and ${bookings.length} bookings.`

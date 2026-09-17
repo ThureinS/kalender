@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils"
 import {
   getBookingsForUser,
   type BookingRow,
-} from "@/server/actions/bookings"
-import { getEvents } from "@/server/actions/events"
-import { getOrCreateProfile } from "@/server/actions/profiles"
+} from "@/server/queries/bookings"
+import { getEvents } from "@/server/queries/events"
+import { getOrCreateProfile } from "@/server/queries/profiles"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import {
   CalendarCheck2,
@@ -80,7 +80,7 @@ function BookingHistorySection({
                     <div className="flex min-w-0 items-center gap-2">
                       <CalendarClock className="size-4 shrink-0 text-primary" />
                       <span className="truncate">
-                        {formatDateTime(booking.startTime)}
+                        {formatDateTime(booking.startTime, booking.timezone)}
                       </span>
                     </div>
                     <div className="flex min-w-0 items-center gap-2">

@@ -4,10 +4,10 @@
 import { meetingFormSchema } from "@/schema/meetings"
 import { createMeeting } from "@/server/actions/meetings"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { toZonedTime } from "date-fns-tz"
+import { formatInTimeZone, toZonedTime } from "date-fns-tz"
 import { useRouter } from "next/navigation"
 import type { ReactNode } from "react"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
@@ -58,11 +58,13 @@ function BookingStep({
 
 export default function MeetingForm({
     validTimes,
+    bookingEnabled,
     eventId,
     clerkUserId,
     profileHandle,
     eventSlug,
   }: {
+    bookingEnabled: boolean
     validTimes: Date[] // Predefined list of available times
     eventId: string     // ID of the event to associate with the meeting
     clerkUserId: string // User ID from authentication system
@@ -71,6 +73,7 @@ export default function MeetingForm({
   }) {
 
     const router = useRouter()
+    const requestId = useRef<string | null>(null)
     const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
     const defaultDate = validTimes[0]
       ? toZonedTime(validTimes[0], defaultTimezone)
@@ -102,6 +105,7 @@ export default function MeetingForm({
     const guestName = form.watch("guestName")
     const guestEmail = form.watch("guestEmail")
     const canSubmit =
+      bookingEnabled &&
       Boolean(startTime) &&
       guestName.trim().length > 0 &&
       z.string().email().safeParse(guestEmail).success
@@ -114,8 +118,8 @@ export default function MeetingForm({
     const selectedDateTimes = useMemo(() => {
       if (!date) return []
 
-      return validTimesInTimezone.filter(time => isSameDay(time, date))
-    }, [date, validTimesInTimezone])
+      return validTimes.filter(time => isSameDay(toZonedTime(time, timezone), date))
+    }, [date, validTimes, timezone])
 
     useEffect(() => {
       const firstAvailableDate = validTimesInTimezone[0]
@@ -136,18 +140,24 @@ export default function MeetingForm({
         // Call the createMeeting action (assuming it handles success/failure internally)
         const meetingData =  await createMeeting({
             ...values,
+            requestId: requestId.current ?? (requestId.current = crypto.randomUUID()),
             eventId,
             clerkUserId,
         })
 
-            // Initialize the path variable to use it later in the finally block
-            const path = `/book/${profileHandle}/${eventSlug}/success?startTime=${encodeURIComponent(meetingData.startTime.toISOString())}`;
+            if ("error" in meetingData) {
+              form.setError("root", { message: meetingData.error })
+              return
+            }
+
+            // The receipt is backed by a persisted booking.
+            const path = `/book/${profileHandle}/${eventSlug}/success?bookingId=${meetingData.bookingId}`;
             router.push(path)
     
-        } catch (error: any) {
+        } catch {
         // Handle any error that occurs during the meeting creation
         form.setError("root", {
-            message: `There was an unknown error saving your event ${error.message}`,
+            message: "We could not confirm your booking. Retry with the same details.",
         })
         }
     }
@@ -162,6 +172,11 @@ export default function MeetingForm({
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="flex flex-col gap-5"
               >
+                {!bookingEnabled && (
+                  <p className="rounded-md border border-border bg-muted p-3 text-sm text-muted-foreground">
+                    Portfolio preview. Live bookings are limited to approved demo testers.
+                  </p>
+                )}
                 {/* Show root error message if form submission fails */}
                 {form.formState.errors.root && (
                   <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -180,7 +195,7 @@ export default function MeetingForm({
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="size-4 text-primary" />
-                    <span>{startTime ? formatTimeString(startTime) : "Choose a time"}</span>
+                    <span>{startTime ? formatTimeString(toZonedTime(startTime, timezone)) : "Choose a time"}</span>
                   </div>
                 </div>
 
@@ -294,7 +309,7 @@ export default function MeetingForm({
                                         )}
                                         onClick={() => field.onChange(time)}
                                       >
-                                        {formatTimeString(time)}
+                                        {formatInTimeZone(time, timezone, "h:mm a zzz")}
                                         {selected && <Check className="size-4" />}
                                       </Button>
                                     )
@@ -374,7 +389,7 @@ export default function MeetingForm({
                     <div className="min-w-0">
                       <p className="font-medium text-foreground">
                         {startTime
-                          ? `${formatDate(startTime)} at ${formatTimeString(startTime)}`
+                          ? `${formatDate(toZonedTime(startTime, timezone))} at ${formatTimeString(toZonedTime(startTime, timezone))}`
                           : "Select a time to finish booking"}
                       </p>
                       <p className="mt-1 text-muted-foreground">

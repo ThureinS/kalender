@@ -1,13 +1,14 @@
+import { z } from "zod"
+import { getBookingReceipt } from "@/server/queries/bookings"
+
 import {
   BookingContentColumn,
   BookingIdentityRail,
   BookingPageSplit,
 } from "@/components/layout/product-surfaces";
 import { Button } from "@/components/ui/button";
-import { formatDateTime, formatEventDescription } from "@/lib/formatters";
+import { formatEventDescription } from "@/lib/formatters";
 import {
-  getCalendarUserForProfile,
-  resolvePublicEvent,
   resolvePublicProfileSegment,
 } from "@/server/publicBooking";
 import {
@@ -19,37 +20,24 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 export default async function SuccessPage({
   params,
   searchParams,
 }: {
   params: Promise<{ handle: string; eventSlug: string }>
-  searchParams: Promise<{ startTime?: string }>
+  searchParams: Promise<{ bookingId?: string }>
 }) {
   const { handle, eventSlug } = await params
-  const { startTime } = await searchParams
-  const { profile, isLegacySegment } = await resolvePublicProfileSegment(handle)
-  if (!profile || !startTime) notFound()
-
-  const event = await resolvePublicEvent(profile, eventSlug)
-  if (!event) notFound()
-
-  const canonicalEventSlug = event.slug ?? event.id
-  if (isLegacySegment || eventSlug !== canonicalEventSlug) {
-    redirect(
-      `/book/${profile.handle}/${canonicalEventSlug}/success?startTime=${encodeURIComponent(startTime)}`
-    )
-  }
-
-  const calendarUser = await getCalendarUserForProfile(profile)
-  if (!calendarUser) notFound()
-
-  const startTimeDate = new Date(startTime)
-  if (Number.isNaN(startTimeDate.getTime())) notFound()
-
-  const hostName = profile.displayName || calendarUser.fullName || "Kalender host"
+  const { bookingId } = await searchParams
+  if (!bookingId || !z.uuid().safeParse(bookingId).success) notFound()
+  const { profile } = await resolvePublicProfileSegment(handle)
+  if (!profile) notFound()
+  const booking = await getBookingReceipt(bookingId, profile.clerkUserId)
+  if (!booking || booking.eventSlug !== eventSlug) notFound()
+  const canonicalEventSlug = booking.eventSlug
+  const hostName = profile.displayName || "Kalender host"
 
   return (
     <BookingPageSplit className="min-h-[calc(100dvh-6rem)] py-8">
@@ -64,7 +52,7 @@ export default async function SuccessPage({
             Booking Confirmed
           </p>
           <h1 className="mt-2 break-words font-display text-3xl font-semibold tracking-normal text-foreground lg:text-4xl">
-            You're booked with {hostName}
+            You&apos;re booked with {hostName}
           </h1>
 
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
@@ -74,11 +62,11 @@ export default async function SuccessPage({
           <div className="mt-6 space-y-3 border-t border-border/80 pt-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Clock className="size-4 text-primary" />
-              {formatEventDescription(event.durationInMinutes)}
+              {formatEventDescription(booking.eventDurationInMinutes)}
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="size-4 text-primary" />
-              {event.location}
+              {booking.eventLocation}
             </div>
             <div className="flex items-center gap-2">
               <Sparkles className="size-4 text-primary" />
@@ -94,10 +82,10 @@ export default async function SuccessPage({
             <CalendarCheck2 className="size-6" />
           </div>
           <p className="mt-5 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            {event.name}
+            {booking.eventName}
           </p>
           <h2 className="mt-2 font-display text-2xl font-semibold tracking-normal">
-            {formatDateTime(startTimeDate)}
+            {new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: booking.timezone }).format(booking.startTime)} ({booking.timezone})
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
             Keep an eye on your inbox for the confirmation and calendar invite. You can safely close this page.

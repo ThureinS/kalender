@@ -1,92 +1,84 @@
-'use server'
+"use server"
 
-import { db } from "@/drizzle/db";
-import { meetingActionSchema } from "@/schema/meetings";
-import { fromZonedTime } from "date-fns-tz";
-import { getValidTimesFromSchedule } from "./schedule";
-import { createCalendarEvent } from "../google/googleCalendar";
-import { z } from "zod";
-import { createConfirmedBooking } from "./bookings";
-import { revalidatePath } from "next/cache";
+import { canCreateBooking } from "@/server/bookingAccess"
+import { createHash } from "node:crypto"
+import { addDays } from "date-fns"
+import { db } from "@/drizzle/db"
+import { meetingActionSchema } from "@/schema/meetings"
+import { BOOKING_HORIZON_DAYS, conflictRange } from "@/lib/availability"
+import { completeBooking } from "@/lib/booking-workflow"
+import { getValidTimesForEventRange } from "@/server/queries/schedule"
+import { getReservation, reserveBooking } from "@/server/queries/reservations"
+import { createCalendarEvent } from "@/server/google/googleCalendar"
+import { createConfirmedBooking } from "@/server/queries/bookings"
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
-//Server action to create a meeting
-export async function createMeeting(
-  unsafeData: z.infer<typeof meetingActionSchema> // Incoming data, inferred from the meetingActionSchema
-) {
-
-
+export async function createMeeting(unsafeData: z.infer<typeof meetingActionSchema>) {
+  if (!await canCreateBooking()) return { error: "Live bookings are limited to approved demo testers." } as const
+  const parsed = meetingActionSchema.safeParse(unsafeData)
+  if (!parsed.success) return { error: "Check your booking details and try again." } as const
+  const data = parsed.data
+  const { requestId, ...request } = data
+  const requestHash = createHash("sha256").update(JSON.stringify(request)).digest("hex")
   try {
-    // Validate the incoming data against the schema
-    const { success, data } = meetingActionSchema.safeParse(unsafeData);
-
-    // If validation fails, throw an error
-    if (!success) {
-      throw new Error("Invalid data.");
+    const priorReservation = await getReservation(requestId)
+    if (priorReservation && priorReservation.requestHash !== requestHash) {
+      return { error: "This attempt already has different details. Retry the original details or contact the host before starting another booking." } as const
     }
-
-    // Try to find the event in the database that matches the provided IDs and is active
-    const event = await db.query.EventTable.findFirst({
-      where: ({ clerkUserId, isActive, id }, { eq, and }) =>
-        and(
-          eq(isActive, true), // Event must be active
-          eq(clerkUserId, data.clerkUserId), // Belonging to the right user
-          eq(id, data.eventId) // Matching the event ID
-        ),
-    });
-
-    // If no matching event is found, throw an error
-    if (!event) {
-      throw new Error("Event not found.");
-    }
-
-    // Interpret the start time as being in the user's timezone and convert it to a UTC Date
-    const startInTimezone = fromZonedTime(data.startTime, data.timezone);
-
-    // Check if the selected time is valid for the event's availability
-    const validTimes = await getValidTimesFromSchedule([startInTimezone], event);
-
-    // If the selected time is not valid, throw an error
-    if (validTimes.length === 0) {
-      throw new Error("Selected time is not valid.");
-    }
-
-    // Create the Google Calendar event with all necessary details
-    const calendarEvent = await createCalendarEvent({
-      ...data, // guest info, timezone, etc.
-      startTime: startInTimezone, // adjusted to the right timezone
-      durationInMinutes: event.durationInMinutes, // use duration from the event
-      eventName: event.name, // use event name from DB
-      eventLocation: event.location,
-    });
-
-    const booking = await createConfirmedBooking({
-      clerkUserId: data.clerkUserId,
-      eventId: data.eventId,
-      eventName: event.name,
-      eventSlug: event.slug,
-      eventDurationInMinutes: event.durationInMinutes,
-      eventLocation: event.location,
-      guestName: data.guestName,
-      guestEmail: data.guestEmail,
-      guestNotes: data.guestNotes,
-      timezone: data.timezone,
-      startTime: startInTimezone,
-      googleCalendarEventId: calendarEvent.id,
-      googleCalendarHtmlLink: calendarEvent.htmlLink,
+    const booking = await completeBooking({
+      findCompleted: async () => {
+        const existing = await db.query.BookingTable.findFirst({
+          where: ({ id }, { eq }) => eq(id, requestId),
+        })
+        if (existing && (!priorReservation || existing.clerkUserId !== data.clerkUserId)) {
+          throw new Error("Request id is already in use")
+        }
+        return existing
+      },
+      reserve: async () => {
+        if (priorReservation) return priorReservation
+        const event = await db.query.EventTable.findFirst({
+          where: ({ id, clerkUserId, isActive, visibility }, { and, eq }) => and(
+            eq(id, data.eventId), eq(clerkUserId, data.clerkUserId), eq(isActive, true), eq(visibility, "public")),
+        })
+        const now = new Date()
+        if (!event || data.startTime <= now || data.startTime > addDays(now, BOOKING_HORIZON_DAYS)) {
+          throw new Error("Unavailable event or time")
+        }
+        const valid = await getValidTimesForEventRange({ start: data.startTime, end: data.startTime, event })
+        if (!valid.length) throw new Error("Unavailable slot")
+        const range = conflictRange(data.startTime, event.durationInMinutes, event.bufferMinutes)
+        return reserveBooking({ id: requestId, clerkUserId: data.clerkUserId,
+          requestHash, startTime: range.start, endTime: range.end,
+          payload: { eventId: event.id, eventName: event.name, eventSlug: event.slug,
+            eventDurationInMinutes: event.durationInMinutes, eventLocation: event.location,
+            guestName: data.guestName, guestEmail: data.guestEmail, guestNotes: data.guestNotes,
+            timezone: data.timezone, startTime: data.startTime.toISOString() },
+        })
+      },
+      createCalendarEvent: reservation => createCalendarEvent({
+        ...reservation.payload, clerkUserId: reservation.clerkUserId,
+        startTime: new Date(reservation.payload.startTime),
+        durationInMinutes: reservation.payload.eventDurationInMinutes,
+        calendarEventId: requestId.replaceAll("-", ""),
+      }),
+      persist: async (reservation, calendar) => {
+        const result = await createConfirmedBooking({
+          ...reservation.payload, clerkUserId: reservation.clerkUserId,
+          startTime: new Date(reservation.payload.startTime),
+          googleCalendarEventId: calendar.id, googleCalendarHtmlLink: calendar.htmlLink,
+        }, requestId)
+        if (!result) throw new Error("Booking persistence was not confirmed")
+        return result
+      },
     })
-
     revalidatePath("/bookings")
-
-    return {
-      clerkUserId: data.clerkUserId,
-      eventId: data.eventId,
-      bookingId: booking.id,
-      startTime: data.startTime,
-    }
-  } catch (error: any) {
-    // Log the error message (or handle it based on your need)
-    console.error(`Error creating meeting: ${error.message || error}`);
-    // Optionally throw the error to be handled further upstream
-    throw new Error(`Failed to create meeting: ${error.message || error}`);
+    return { bookingId: booking.id } as const
+  } catch {
+    // Do not log raw provider/database errors: they can contain tokens, SQL and
+    // guest data. The request id is sufficient for operator reconciliation.
+    console.error("Booking could not be confirmed", { requestId })
+    return { error: "We could not confirm this booking. Retry with the same details. If it continues, contact the host before starting another booking." } as const
   }
 }

@@ -1,6 +1,6 @@
 import { DAYS_OF_WEEK_IN_ORDER } from "@/constants";
 import { relations } from "drizzle-orm";
-import { boolean, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 
 // Define a reusable `createdAt` timestamp column with default value set to now
@@ -147,3 +147,26 @@ export const ScheduleAvailabilityRelations = relations(
       }),
     })
   )
+
+// Overlap exclusion is declared in migration 0004 (Drizzle has no exclusion
+// constraint builder). Reservations survive uncertain external API outcomes.
+export const BookingReservationTable = pgTable("bookingReservations", {
+  id: uuid("id").primaryKey(),
+  clerkUserId: text("clerkUserId").notNull(),
+  startTime: timestamp("startTime").notNull(),
+  endTime: timestamp("endTime").notNull(),
+  requestHash: text("requestHash").notNull(),
+  payload: jsonb("payload").$type<{
+    eventId: string
+    eventName: string
+    eventSlug: string | null
+    eventDurationInMinutes: number
+    eventLocation: string | null
+    guestName: string
+    guestEmail: string
+    guestNotes?: string
+    timezone: string
+    startTime: string
+  }>().notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+})

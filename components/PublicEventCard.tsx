@@ -1,5 +1,5 @@
 import { formatEventDescription } from "@/lib/formatters"
-import type { PublicEvent } from "@/server/actions/events"
+import type { PublicEvent } from "@/server/queries/events"
 import Link from "next/link"
 import { ArrowRight, Clock, MapPin } from "lucide-react"
 

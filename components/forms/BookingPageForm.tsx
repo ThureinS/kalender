@@ -1,5 +1,7 @@
 "use client"
 
+import Image from "next/image"
+
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -59,7 +61,7 @@ type BookingPageFormProps = {
   }
 }
 
-const resolver = zodResolver(profileFormSchema) as Resolver<FormValues, any>
+const resolver = zodResolver(profileFormSchema) as Resolver<FormValues>
 
 function getInitials(displayName: string) {
   return (
@@ -130,9 +132,9 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
         accent: updatedProfile.accent as FormValues["accent"],
       })
       appToast.success("Booking Page saved.")
-    } catch (error: any) {
+    } catch (error: unknown) {
       const message =
-        error?.message ||
+        (error instanceof Error ? error.message : "") ||
         "There was an error saving your Booking Page. Try again."
       form.setError("root", { message })
 
@@ -166,7 +168,7 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
                 <div className="mt-3 flex items-center gap-4">
                   <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary font-display text-lg font-semibold text-primary-foreground">
                     {profile.avatarUrl ? (
-                      <img
+                      <Image unoptimized width={96} height={96}
                         src={profile.avatarUrl}
                         alt=""
                         className="h-full w-full object-cover"
@@ -382,7 +384,7 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
             <div className="relative">
               <div className="flex size-16 items-center justify-center overflow-hidden rounded-full bg-primary font-display text-xl font-semibold text-primary-foreground shadow-[0_0_36px_-10px_var(--primary)]">
                 {profile.avatarUrl ? (
-                  <img
+                  <Image unoptimized width={96} height={96}
                     src={profile.avatarUrl}
                     alt=""
                     className="h-full w-full object-cover"

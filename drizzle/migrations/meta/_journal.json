@@ -29,6 +29,13 @@
       "when": 1788763894918,
       "tag": "0003_unique_mesmero",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789558711555,
+      "tag": "0004_booking_reservations",
+      "breakpoints": true
     }
   ]
 }

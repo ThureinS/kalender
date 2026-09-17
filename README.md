@@ -4,6 +4,32 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 
 > **Note**: This is a learning project. There is no license associated with this repository.
 
+## Portfolio Demo Status
+
+Kalender's portfolio-demo feature and UI phases are implemented. The temporary
+Theme Lab prototype routes have been removed from the deployment candidate.
+
+The original app is already live at [kalender-tau.vercel.app](https://kalender-tau.vercel.app/).
+The `ui-overhaul` audit fixes are in the working tree. On September 17, the
+lockfile was repaired, clean installation passed, the dependency audit reported
+zero known vulnerabilities, and `npm run check` passed all stages (26 tests).
+Before a Vercel preview, resolve public demo credentials versus real-booking
+access and finish configuration and deployment approval. Read the
+[audit report](docs/ui-overhaul/pre-deployment-audit.md) and
+[handoff](docs/ui-overhaul/README.md#current-handoff-state) before continuing.
+The reservation migration has been applied to the development Neon database,
+selected for the preview. Earlier configuration inspection found the existing
+production deployment already shares this database; a separate preview URL
+does not isolate data. Migration presence was independently verified on
+September 17; live booking and browser QA are still pending.
+
+Public demo credentials remain unpublished pending that decision. Sharing an
+allowlisted login shares real Calendar invitation capability. The recommendation
+is separate, disposable, non-allowlisted exploration accounts and private booking
+testers; this has not yet been adopted. Exploration accounts can still edit their
+own workspace, so they must not be the connected Calendar host. See the
+[verified access review](docs/ui-overhaul/pre-deployment-audit.md#public-credentials-versus-real-booking-code-review-september-17).
+
 ## 🚀 Tech Stack
 
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router, TurboPack)
@@ -25,14 +51,14 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 - **Public Booking**: Shareable booking pages for others to schedule meetings.
 - **Dashboard**: Private area for managing events and viewing schedules.
 - **Availability Scheduling**: Configure availability windows (implied by schema).
-- **Theme Support**: Dark/Light mode using `next-themes`.
+- **Product surfaces**: Midnight public pages and Daylight private workspace.
 
 ## 📂 Project Structure
 
 - **`app/(main)/(public)`**: Public-facing routes (e.g., Landing page, Booking pages).
 - **`app/(main)/(private)`**: Authenticated application routes (Dashboard, Events, Schedule).
 - **`app/(auth)`**: Authentication routes (Login, Register).
-- **`drizzle/schema`**: Database schema definitions (Events, Meetings, Schedule).
+- **`drizzle/schema.ts`**: Profiles, events, schedules, booking history, and reservations.
 - **`components`**: Reusable UI components.
 - **`lib`**: Utility functions and shared logic.
 
@@ -40,7 +66,7 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 
 ### Prerequisites
 
-- Node.js (version compatible with Next.js 15)
+- Node.js 22.12+ (Node 22; see `.nvmrc`)
 - npm or yarn or pnpm
 - A Neon database instance
 - A Clerk account
@@ -56,12 +82,17 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 
 2. **Install dependencies**
 
+   The lockfile was synchronized and a clean install verified on September 17
+   with Node 22.21.1 and npm 10.9.4.
+
    ```bash
-   npm install
+   npm ci
    ```
 
 3. **Environment Setup**
-   Create a `.env.local` file in the root directory and add the following variables (based on `drizzle.config.ts` and typical setups):
+   Copy `.env.example` to `.env.local` and configure the intended database and matching Clerk keys. The current preview
+   plan reuses development Clerk and the shared Neon database; scope those keys
+   to the preview because existing production uses a different Clerk instance. Live bookings default to disabled; approved-tester access is configured separately. Required service credentials:
 
    ```env
    DATABASE_URL=your_neon_database_url
@@ -70,10 +101,9 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
    ```
 
 4. **Database Migration**
-   Push the schema to your database:
+   Apply committed migrations to the intended database (the CLI loads `.env.local`):
 
    ```bash
-   npm run db:generate
    npm run db:migrate
    ```
 
@@ -87,10 +117,19 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 
 - `npm run dev`: Starts the development server with TurboPack.
 - `npm run build`: Builds the application for production.
+- `npm run lint`: Runs non-interactive ESLint with zero warnings allowed.
+- `npm test`: Runs critical-flow tests against disposable PostgreSQL and mocked APIs.
+- `npm run typecheck`: Checks TypeScript.
+- `npm run check`: Runs lint, tests, typecheck, build, and compiled-boundary checks.
 - `npm run start`: Starts the production server.
 - `npm run db:generate`: Generates Drizzle migrations.
 - `npm run db:migrate`: Applies Drizzle migrations.
 - `npm run db:studio`: Opens Drizzle Studio to view/edit data.
+- `npm run db:seed:demo`: Seeds a curated demo workspace for a dedicated Clerk test user.
+- `npm run demo:create-testers`: User-run account creation helper; changes Clerk data.
+  Existing emails are reused without updating or verifying their passwords.
+  Resolve the access decision in the handoff before publishing credentials or
+  placing publicly shared accounts on the real-booking allowlist.
 
 ## 🤝 Contributing
 

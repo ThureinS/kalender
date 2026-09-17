@@ -363,7 +363,7 @@ export default function LandingPage() {
                 Respect real availability
               </h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Visitors only see valid slots, while buffers and calendar conflicts protect the host's day.
+                Visitors only see valid slots, while buffers and calendar conflicts protect the host&apos;s day.
               </p>
             </div>
             <div className="rounded-lg border border-border/80 bg-card p-5">

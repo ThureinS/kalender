@@ -1,3 +1,6 @@
+import { loadEnvConfig } from "@next/env"
+loadEnvConfig(process.cwd())
+
 import { defineConfig } from "drizzle-kit"
 
 // 🔍 Get the database URL from environment variables

@@ -1,6 +1,6 @@
 import PublicProfile from "@/components/PublicProfile"
-import { getPublicEvents } from "@/server/actions/events"
-import { getSchedule } from "@/server/actions/schedule"
+import { getPublicEvents } from "@/server/queries/events"
+import { getSchedule } from "@/server/queries/schedule"
 import { resolvePublicProfileSegment } from "@/server/publicBooking"
 import { notFound, redirect } from "next/navigation"
 

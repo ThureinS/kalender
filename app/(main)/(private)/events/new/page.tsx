@@ -2,7 +2,7 @@
 
 import EventForm from "@/components/forms/EventForm";
 import { AppPageHeader } from "@/components/layout/product-surfaces";
-import { getOrCreateProfile } from "@/server/actions/profiles";
+import { getOrCreateProfile } from "@/server/queries/profiles";
 import { auth, currentUser } from "@clerk/nextjs/server";
 
 export default async function NewEventPage(){

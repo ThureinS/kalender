@@ -3,7 +3,7 @@
 import { ScheduleForm } from "@/components/forms/ScheduleForm"
 import { AppPageHeader } from "@/components/layout/product-surfaces"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getSchedule } from "@/server/actions/schedule"
+import { getSchedule } from "@/server/queries/schedule"
 import { auth } from "@clerk/nextjs/server"
 
 

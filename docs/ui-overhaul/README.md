@@ -12,8 +12,8 @@ Current foundation state:
 - Midnight/Daylight Lime production tokens are defined in `app/globals.css`.
 - Production theme application uses `data-kalender-theme`, not lab-only
   `.theme-*` classes.
-- `/theme-lab` and `/theme-lab/layouts` remain as frozen visual references, not
-  production implementation.
+- The temporary `/theme-lab` and `/theme-lab/layouts` prototype routes and their
+  prototype-only CSS tokens were removed before deployment preparation.
 - Storefront and App Shell layout primitives live in
   `components/layout/product-surfaces.tsx`.
 - The main route group now splits signed-in pages onto the Daylight App Shell
@@ -265,6 +265,11 @@ Committed checkpoint:
   to match the Phase 8 landing page. Both now use a Midnight product-auth shell,
   scoped Clerk appearance overrides, clear scheduling workspace context, and
   explicit Clerk path routing/redirect props.
+- On September 16, 2026, the project direction was confirmed as a portfolio
+  demo that will be deployed and then tested through its real public URL in
+  desktop and mobile browsers. The temporary Theme Lab routes and their
+  prototype-only theme classes were removed because the selected Midnight,
+  Daylight, and Lime system is already implemented in production surfaces.
 - On September 3, 2026, event creation feedback was retested. Event saves now
   use a loading toast and route with a short-lived `toast` query marker so the
   destination page can show the success toast after App Router navigation.
@@ -272,19 +277,112 @@ Committed checkpoint:
   route loads. Overview now degrades when a workspace query fails, but public
   booking routes still depend on database reads and should be retried when Neon
   connectivity is unstable.
-- A development-only Google OAuth warning can appear on public event routes when
-  no valid local Google token is available; the route still renders and the app
-  skips busy-time lookup in development.
+- The audit removed the development-only bypass for Google busy-time failures.
+  Missing or invalid Google authorization now fails availability checks closed;
+  reconnect the host account before testing real booking availability.
 
-Next checkpoint:
+### Next session plan
 
-- Phase 8 landing page is implemented and ready for local portfolio demo use.
-- The seeded demo public profile is available at `/book/demo-strategy-studio`
-  while the development database keeps the Phase 7 seed data.
-- When deployment resumes, choose the production domain and Clerk production
-  instance before finalizing production Google OAuth redirect URIs.
-- Production deployment, custom domain, Clerk production setup, and Google OAuth
-  verification remain deferred.
+The September 16 architecture/code-quality audit is implemented in the working
+tree; do not repeat it from scratch. Read the
+[severity-ranked audit report](pre-deployment-audit.md). The September 17
+catch-up independently checked the current manifests, booking access code,
+tester script, and live Neon schema metadata. The subsequent September 17
+follow-up repaired the lockfile, completed clean installation, cleared the
+dependency audit and passed `npm run check`. It also reviewed the access decision
+without changing the policy. No browser work was performed.
+
+Recorded deployment decisions from September 17:
+
+- Use a separate Vercel preview URL before updating `kalender-tau.vercel.app`.
+  This separates the deployed code, not the database.
+- Reuse the development Clerk instance and existing Neon database for the
+  preview. Earlier configuration inspection found that local development and
+  the existing production deployment already point to the same Neon database;
+  production uses a different Clerk instance. Scope the preview's Clerk keys
+  explicitly and verify owner IDs in that instance. Database changes affect
+  both deployments and local development.
+- Use `KALENDER_BOOKING_MODE=testers` with a few dedicated email/password
+  accounts (3 by default). The handoff assigns account creation to the user
+  through `npm run demo:create-testers`; do not execute it during catch-up.
+- Publish demo credentials in the root README and link reviewers there from the
+  landing page. This recorded choice is not implemented. It conflicts with
+  keeping real booking access restricted: anyone with a published allowlisted
+  account can submit bookings and send Calendar invitations. Resolve the access
+  design before creating or publishing those accounts. Recommended: public
+  exploration accounts, with real-booking testers kept private and separately
+  allowlisted. This recommendation is not yet an accepted change to the plan.
+  The follow-up code review also confirmed that non-allowlisted logins can
+  still edit their own workspace, and booking testers are not restricted to a
+  specific host or recipient. Keep any public exploration account separate
+  from the Calendar host. See the [access review](pre-deployment-audit.md#public-credentials-versus-real-booking-code-review-september-17)
+  before resolving this decision; no policy change or credential publication
+  has been made.
+
+Next work, in order:
+
+1. **Completed September 17:** repaired all 10 root lockfile mismatches/missing
+   entries, applied compatible transitive advisory fixes, and verified a fresh
+   `npm ci`, zero-vulnerability dependency audit and full `npm run check` on
+   Node 22.21.1. See [fresh validation](pre-deployment-audit.md#september-17-dependency-repair-and-follow-up-validation).
+   Revalidate if code or dependencies change before deployment.
+2. Resolve public demo credentials versus real-booking access. Then prepare the
+   agreed accounts and verify sign-in. The helper reuses matching emails but
+   neither changes nor verifies an existing account's password; rerunning it
+   does not guarantee the supplied shared password works.
+3. Confirm the Calendar host account, Google test users and reconnection plan;
+   prepare preview-scoped Vercel/Clerk configuration and callback URLs. Keep
+   Google OAuth in Testing mode. Migration 0004 is already present in the
+   selected database; do not repeat it or reseed merely for deployment.
+4. Obtain explicit deployment approval, deploy the reviewed preview, then test
+   the public URL in real desktop/mobile browsers when browser work resumes.
+   Cover landing, auth, onboarding, workspace, public profile/event, OAuth,
+   confirmation and history. A real booking recipient/time and cleanup still
+   require action-time approval.
+5. Record the preview URL, configuration, QA evidence and known limits before
+   deciding promotion to the existing production URL and the merge/push checkpoint.
+
+### Current handoff state
+
+- Phase 8 and polished auth pages are implemented. The seeded profile is
+  `/book/demo-strategy-studio`; seed data was not inspected or changed during
+  this catch-up.
+- Theme Lab removal and existing uncommitted code/documentation changes are
+  preserved. The build-manifest check guards the retired routes and six intended
+  application Server Actions; internal helpers use `server-only`.
+- The original app is already live at https://kalender-tau.vercel.app/.
+  September 16 inspection confirmed HTTP 200 and the Vercel production revision
+  `687cb35`. Hosting state was not rechecked during this browser-free catch-up.
+  The current uncommitted `ui-overhaul` changes have not been deployed here.
+- Bookings use UTC instants, durable owner-wide reservations, deterministic
+  Google event IDs and persisted confirmation receipts. Writes default to
+  disabled; `testers` checks the signed-in Clerk ID against the allowlist.
+- Migration 0004 was reported applied with approval on September 17. This
+  catch-up independently confirmed five database migration hashes matching
+  local SQL files 0000–0004, the `bookingReservations` table, its positive-range
+  check and owner-wide GiST exclusion constraint, and `btree_gist`. These were
+  read-only metadata queries; they do not prove OAuth or real booking success.
+- Fresh September 17 follow-up validation supersedes the catch-up lockfile
+  blocker: package/lockfile roots now match; clean `npm ci` and a separate audit
+  pass with zero known vulnerabilities. `npm run check` passes zero-warning
+  lint, 26 tests across five suites, typecheck, production build and compiled
+  action/retired-route checks. Node 22.21.1 and npm 10.9.4 ran validation;
+  npm 11.19.1 was needed only for lockfile repair. The manifest was unchanged.
+  Initial audit findings were fixed with compatible `jws`, `qs`, `sharp` and
+  `tar` updates. Upstream install deprecations and Webpack cache performance
+  warnings remain non-failing. No schema generation or live database check was
+  repeated in this follow-up.
+- The tester helper exists, but the handoff says it has not been run. Clerk
+  account inventory and sign-in were not independently checked in this catch-up;
+  do not claim no tester accounts exist. README credentials and the landing-page
+  link remain unimplemented.
+- Remaining blockers are the public-credentials access decision,
+  Calendar/preview configuration and deployment approval.
+  Browser QA is deferred at the user's request. No account creation, migration,
+  seed replacement, real booking, configuration change, push or deployment was
+  performed during this catch-up or the dependency/access follow-up. This
+  follow-up changed only the lockfile and related documentation; all previous
+  uncommitted changes remain in the existing working tree.
 
 ## Product Goal
 
@@ -607,8 +705,8 @@ Status: implemented and browser-QA verified through Phase 4.
 
 Implementation notes:
 
-- Keep production theme selectors decoupled from `.theme-midnight` and
-  `.theme-daylight`; those classes are preserved for lab references only.
+- Keep production theme selectors on `data-kalender-theme`; the temporary lab
+  classes have been removed.
 - Use `StorefrontSurface` for expressive public surfaces and `AppShellSurface`
   for the stable signed-in workspace.
 - Continue removing hardcoded legacy colors only in files touched by each
@@ -809,10 +907,9 @@ Every production chunk should include:
 - No unexplained unfamiliar terms.
 - Build verification before handoff.
 
-## Current Prototype References
+## Retired Prototype References
 
-- `/theme-lab`: visual identity explorations.
-- `/theme-lab/layouts`: booking page layout explorations.
-
-These routes are allowed to remain during exploration, but production work
-should eventually replace or remove them.
+The `/theme-lab` and `/theme-lab/layouts` explorations were removed on
+September 16, 2026. Their selected direction now lives in the production theme
+tokens and product surfaces; no prototype routes are part of the deployment
+candidate.

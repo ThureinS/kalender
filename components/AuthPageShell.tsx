@@ -2,7 +2,6 @@ import {
   CalendarCheck2,
   CalendarClock,
   CalendarDays,
-  CheckCircle2,
   LinkIcon,
   ShieldCheck,
 } from "lucide-react"

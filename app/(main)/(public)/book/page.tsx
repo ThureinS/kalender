@@ -1,4 +1,4 @@
-import { getOrCreateProfile } from "@/server/actions/profiles"
+import { getOrCreateProfile } from "@/server/queries/profiles"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 

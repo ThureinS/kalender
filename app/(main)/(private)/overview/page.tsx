@@ -13,9 +13,9 @@ import {
   hasGoogleCalendarScopes,
   isGoogleConnection,
 } from "@/lib/setup-readiness"
-import { getEvents } from "@/server/actions/events"
-import { getOrCreateProfile } from "@/server/actions/profiles"
-import { getSchedule } from "@/server/actions/schedule"
+import { getEvents } from "@/server/queries/events"
+import { getOrCreateProfile } from "@/server/queries/profiles"
+import { getSchedule } from "@/server/queries/schedule"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import {
   AlertTriangle,

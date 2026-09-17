@@ -1,10 +1,11 @@
+import { canCreateBooking } from "@/server/bookingAccess"
+import { BOOKING_HORIZON_DAYS } from "@/lib/availability"
 import { ArrowLeft, CalendarDays, Clock, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import {
-  addYears,
-  endOfDay,
+  addDays,
   roundToNearestMinutes,
 } from "date-fns"
-import { getSchedule, getValidTimesForEventRange } from "@/server/actions/schedule";
+import { getSchedule, getValidTimesForEventRange } from "@/server/queries/schedule";
 import NoTimeSlots from "@/components/NoTimeSlots";
 import MeetingForm from "@/components/forms/MeetingForm";
 import { notFound, redirect } from "next/navigation";
@@ -18,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { formatEventDescription } from "@/lib/formatters";
 import { getProfileAccentStyle } from "@/lib/profileAccent";
 import {
-  getCalendarUserForProfile,
   resolvePublicEvent,
   resolvePublicProfileSegment,
 } from "@/server/publicBooking";
@@ -46,8 +46,7 @@ export default async function BookingPage({
       redirect(`/book/${profile.handle}/${canonicalEventSlug}`)
     }
 
-    const calendarUser = await getCalendarUserForProfile(profile)
-    if (!calendarUser) notFound()
+    const calendarUser = { id: profile.clerkUserId, fullName: profile.displayName }
 
     const schedule = await getSchedule(profile.clerkUserId)
     const hasAvailability = (schedule?.availabilities.length ?? 0) > 0
@@ -77,20 +76,20 @@ export default async function BookingPage({
       )
     }
 
-     // Define a date range from now (rounded up to the nearest 15 minutes) to 1 year later
+     // Keep provider work and client payloads bounded to the booking horizon.
     const startDate = roundToNearestMinutes(new Date(), {
       nearestTo: 15,
       roundingMethod: "ceil",
     })
     
-    const endDate = endOfDay(addYears(startDate, 1)) // Set range to 1 year ahead
+    const endDate = addDays(new Date(), BOOKING_HORIZON_DAYS)
 
      // Generate valid available time slots for the event using the custom scheduler logic
+  const bookingEnabled = await canCreateBooking()
   const validTimes = await getValidTimesForEventRange({
     start: startDate,
     end: endDate,
     event,
-    stepMinutes: 15,
   })
 
    // If no valid time slots are available, show a message and an option to pick another event
@@ -175,11 +174,12 @@ export default async function BookingPage({
               </div>
             </div>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Kalender only shows times that fit the host's availability and existing calendar.
+              Kalender only shows times that fit the host&apos;s availability and existing calendar.
             </p>
           </div>
 
           <MeetingForm
+              bookingEnabled={bookingEnabled}
             validTimes={validTimes}
             eventId={event.id}
             clerkUserId={profile.clerkUserId}

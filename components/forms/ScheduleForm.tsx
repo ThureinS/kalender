@@ -77,10 +77,10 @@ export function ScheduleForm({
             await saveSchedule(values)
             appToast.success("Schedule saved.")
             router.refresh()
-        } catch (error: any) {
+        } catch {
             // Handle any unexpected errors that occur during the schedule saving process
             form.setError("root", {
-                message: `There was an error saving your schedule${error.message}`,
+                message: "There was an error saving your schedule. Please try again.",
             })
             appToast.error("Schedule was not saved.")
         }

@@ -1,8 +1,10 @@
 "use client"
 
+import Image from "next/image"
+
 import { useAuth } from "@clerk/nextjs"
-import type { PublicEvent } from "@/server/actions/events"
-import type { UserProfile } from "@/server/actions/profiles"
+import type { PublicEvent } from "@/server/queries/events"
+import type { UserProfile } from "@/server/queries/profiles"
 import { CalendarX2, CheckCircle2, Clock3, Copy, Globe2, LinkIcon, MapPin } from "lucide-react"
 import Link from "next/link"
 import { Button } from "./ui/button"
@@ -58,7 +60,7 @@ export default function PublicProfile({
               <div className="flex items-center gap-4 lg:block">
                 <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary font-display text-xl font-semibold text-primary-foreground shadow-[0_0_36px_-10px_var(--primary)] lg:size-20">
                   {profile.avatarUrl ? (
-                    <img
+                    <Image unoptimized width={96} height={96}
                       src={profile.avatarUrl}
                       alt=""
                       className="h-full w-full object-cover"

@@ -1,9 +1,10 @@
+import { timezoneSchema } from "./timezone"
 import { DAYS_OF_WEEK_IN_ORDER } from "@/constants";
 import { timeToFloat } from "@/lib/utils";
 import { z } from "zod";
 
 export const scheduleFormSchema = z.object({
-    timezone: z.string().min(1, "Required"), // The timezone must be a string and cannot be empty
+    timezone: timezoneSchema, // The timezone must be a string and cannot be empty
     availabilities: z // The 'availabilities' field is an array
         .array( // The array contains objects with specific properties
             z.object({
@@ -40,6 +41,8 @@ export const scheduleFormSchema = z.object({
                     ),
             })
         )
+
+        .max(100, "Use at most 100 weekly windows")
 
         //This ensures users can’t submit overlapping or backward time ranges — like 2:00–1:00pm, or two blocks on the same day that conflict.
         .superRefine((availabilities, ctx) => { // Custom refinement function to add additional validation

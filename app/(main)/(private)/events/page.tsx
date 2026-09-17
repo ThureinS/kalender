@@ -1,8 +1,8 @@
 import EventCard from "@/components/cards/EventCard";
 import { AppPageHeader } from "@/components/layout/product-surfaces";
 import { Button } from "@/components/ui/button";
-import { getEvents } from "@/server/actions/events";
-import { getOrCreateProfile } from "@/server/actions/profiles";
+import { getEvents } from "@/server/queries/events";
+import { getOrCreateProfile } from "@/server/queries/profiles";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { CalendarPlus, CalendarRange } from "lucide-react";
 import Link from "next/link";

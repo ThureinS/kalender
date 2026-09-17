@@ -5,8 +5,8 @@ const isPublicRoute = createRouteMatcher([
   "/login(.*)",
   "/register(.*)",
   "/sso-callback(.*)",
-  "/book(.*)",
-  "/theme-lab(.*)",
+  "/book",
+  "/book/(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -17,8 +17,9 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Skip public routes, Next.js internals, and static files.
-    "/((?!$|login(?:/.*)?|register(?:/.*)?|sso-callback(?:/.*)?|book/.+|theme-lab(?:/.*)?|_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Establish Clerk context on booking routes for approved tester actions.
+    // Public pages still do not require sign-in.
+    "/((?!$|login(?:/.*)?|register(?:/.*)?|sso-callback(?:/.*)?|_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes
     "/(api|trpc)(.*)",
     // Clerk proxy

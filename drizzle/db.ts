@@ -1,3 +1,4 @@
+import "server-only"
 // Import the Neon serverless client for PostgreSQL
 import { neon } from "@neondatabase/serverless"
 // Import Drizzle's Neon HTTP driver for ORM support

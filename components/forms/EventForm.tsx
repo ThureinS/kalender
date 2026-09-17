@@ -61,7 +61,7 @@ type EventFormProps = {
     }
 }
 
-const resolver = zodResolver(eventFormSchema) as Resolver<FormValues, any>
+const resolver = zodResolver(eventFormSchema) as Resolver<FormValues>
 
 const durationOptions = [15, 30, 45, 60, 90, 120]
 const bufferOptions = [0, 5, 10, 15, 30, 45, 60]

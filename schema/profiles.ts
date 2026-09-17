@@ -1,3 +1,4 @@
+import { timezoneSchema } from "./timezone"
 import { z } from "zod"
 
 export const PROFILE_ACCENT_OPTIONS = [
@@ -35,14 +36,7 @@ export const profileFormSchema = z.object({
     .trim()
     .max(500, "Bio must be 500 characters or less")
     .optional(),
-  timezone: z
-    .string()
-    .trim()
-    .min(1, "Timezone is required")
-    .refine(
-      timezone => Intl.supportedValuesOf("timeZone").includes(timezone),
-      "Choose a supported timezone"
-    ),
+  timezone: timezoneSchema,
   location: z
     .string()
     .trim()
