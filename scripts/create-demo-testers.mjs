@@ -11,20 +11,28 @@ const args = new Set(process.argv.slice(2))
 
 function printHelp() {
   console.log(`
-Create dedicated demo tester accounts in Clerk for portfolio-demo bookings.
+Create shared visitor test accounts in development Clerk for the portfolio demo.
+Never share the connected Calendar host's login.
 
 Required environment:
-  CLERK_SECRET_KEY                 Secret key for the target Clerk instance.
+  CLERK_SECRET_KEY                 Development secret key (sk_test_) for the target Clerk instance.
   KALENDER_DEMO_TESTER_PASSWORD     Shared password for the created demo accounts (min 8 characters).
   KALENDER_DEMO_TESTER_CONFIRM      Must be "create-demo-testers".
 
 Optional environment:
   KALENDER_DEMO_TESTER_COUNT        Number of accounts to create. Defaults to 3.
-  KALENDER_DEMO_TESTER_EMAIL_DOMAIN Email domain for created accounts. Defaults to "kalender.test".
+  KALENDER_DEMO_TESTER_EMAIL_DOMAIN Email domain for created accounts. Defaults to "example.com".
 
-An account with a matching email is reused, not recreated, so this is safe to
-re-run. Prints the resulting Clerk user ids as a ready-to-paste
-KALENDER_DEMO_BOOKER_IDS value for the deployment environment.
+An account with a matching email is reused without changing or verifying its
+password. Verify sign-in before publishing any credentials. Addresses use
+demo-tester-N+clerk_test@DOMAIN so development email-code verification can use
+424242 without an inbox. Keep Clerk test mode enabled in development only.
+Enter your own real email in the booking form for separately authorized Google
+Calendar invitation testing, even with a shared demo login.
+
+These visitor IDs are not host configuration. Any signed-in visitor may book
+when KALENDER_BOOKING_MODE=demo, but only for KALENDER_DEMO_HOST_CLERK_USER_ID.
+Verify accutility778@gmail.com's host ID separately in the target Clerk instance.
 `)
 }
 
@@ -37,10 +45,14 @@ const secretKey = process.env.CLERK_SECRET_KEY
 const password = process.env.KALENDER_DEMO_TESTER_PASSWORD
 const confirm = process.env.KALENDER_DEMO_TESTER_CONFIRM
 const count = Number(process.env.KALENDER_DEMO_TESTER_COUNT || "3")
-const domain = process.env.KALENDER_DEMO_TESTER_EMAIL_DOMAIN || "kalender.test"
+const domain = process.env.KALENDER_DEMO_TESTER_EMAIL_DOMAIN || "example.com"
 
 if (!secretKey) {
   throw new Error("CLERK_SECRET_KEY is required.")
+}
+
+if (!secretKey.startsWith("sk_test_")) {
+  throw new Error("Demo test-email accounts require a development Clerk secret key (sk_test_).")
 }
 
 if (!password || password.length < 8) {
@@ -60,10 +72,10 @@ if (!Number.isInteger(count) || count < 1 || count > 10) {
 const clerkClient = createClerkClient({ secretKey })
 
 async function ensureTester(index) {
-  const email = `demo-tester-${index}@${domain}`
+  const email = `demo-tester-${index}+clerk_test@${domain}`
   const existing = await clerkClient.users.getUserList({ emailAddress: [email] })
   if (existing.data.length) {
-    console.log(`Reusing existing ${email} -> ${existing.data[0].id}`)
+    console.log(`Reusing existing ${email} -> ${existing.data[0].id} (password unchanged; verify sign-in)`)
     return existing.data[0].id
   }
   const user = await clerkClient.users.createUser({
@@ -81,12 +93,13 @@ async function main() {
   for (let index = 1; index <= count; index += 1) {
     ids.push(await ensureTester(index))
   }
-  console.log("\nSet these in the deployment environment:")
-  console.log("KALENDER_BOOKING_MODE=testers")
-  console.log(`KALENDER_DEMO_BOOKER_IDS=${ids.join(",")}`)
+  console.log(`\nDemo visitor IDs (not Calendar host configuration): ${ids.join(",")}`)
+  console.log("Verify the dedicated host separately before setting KALENDER_BOOKING_MODE=demo and KALENDER_DEMO_HOST_CLERK_USER_ID.")
   console.log(
-    `\nShare each demo-tester-N@${domain} address with the shared password you set in KALENDER_DEMO_TESTER_PASSWORD.`
+    `\nVerify sign-in for each demo-tester-N+clerk_test@${domain} before sharing its credentials. Reused accounts may have a different password.`
   )
+  console.log("For development email-code verification, including new-device checks, use 424242.")
+  console.log("To test invitations, enter your own real email in the booking form. The login email can stay a demo address.")
 }
 
 main().catch(error => {

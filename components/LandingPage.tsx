@@ -12,7 +12,7 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 
 import {
   StorefrontContainer,
@@ -20,6 +20,8 @@ import {
 } from "@/components/layout/product-surfaces"
 import LandingSignedInRedirect from "@/components/LandingSignedInRedirect"
 import { Button } from "@/components/ui/button"
+import DemoVisitorAccess from "@/components/DemoVisitorAccess"
+import { getDemoVisitorAccess } from "@/server/demoVisitorAccess"
 
 const bookingEvents = [
   {
@@ -70,7 +72,7 @@ const bookingRows = [
   },
 ]
 
-function MiniBookingPagePreview() {
+function MiniBookingPagePreview({ bookingsPaused }: { bookingsPaused: boolean }) {
   return (
     <div className="rounded-lg border border-border/80 bg-card p-3 text-card-foreground shadow-[0_0_44px_-20px_var(--primary)] sm:p-4">
       <div className="grid gap-3 md:grid-cols-[210px_minmax(0,1fr)]">
@@ -100,7 +102,7 @@ function MiniBookingPagePreview() {
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-border/80 px-2.5 py-1 font-mono">
                 <span className="size-2 rounded-full bg-primary shadow-[0_0_8px_2px_var(--primary)]" />
-                Open for scheduling
+                {bookingsPaused ? "Preview only" : "Open for scheduling"}
               </span>
             </div>
           </div>
@@ -148,7 +150,7 @@ function MiniBookingPagePreview() {
                 </div>
               </div>
               <span className="inline-flex h-9 w-fit items-center justify-center gap-2 rounded-md border border-primary/70 bg-primary px-3 text-sm font-medium text-primary-foreground">
-                Book
+                {bookingsPaused ? "View" : "Book"}
                 <ArrowRight className="size-4" />
               </span>
             </div>
@@ -161,10 +163,10 @@ function MiniBookingPagePreview() {
 
 function WorkspacePreview() {
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <section className="rounded-lg border border-border/80 bg-card p-5 text-card-foreground">
-        <div className="flex flex-col gap-3 border-b border-border/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <section className="min-w-0 rounded-lg border border-border/80 bg-card p-5 text-card-foreground">
+        <div className="flex flex-col items-start gap-3 border-b border-border/80 pb-5">
+          <div className="min-w-0">
             <p className="font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground">
               Workspace
             </p>
@@ -172,13 +174,13 @@ function WorkspacePreview() {
               Setup stays visible until the link is ready
             </h2>
           </div>
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
-            <CheckCircle2 className="size-3.5" />
+          <span className="inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
+            <CheckCircle2 className="size-3.5 shrink-0" />
             Ready to share
           </span>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-1">
           {workflowSteps.map((step, index) => (
             <div
               key={step}
@@ -187,7 +189,7 @@ function WorkspacePreview() {
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                 {index + 1}
               </span>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold">{step}</p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {index === 0 && "Name, handle, headline, timezone, and location."}
@@ -240,6 +242,8 @@ function WorkspacePreview() {
 }
 
 export default function LandingPage() {
+  const demoAccess = getDemoVisitorAccess()
+  const bookingsPaused = process.env.KALENDER_BOOKING_MODE !== "demo"
   return (
     <StorefrontSurface className="overflow-hidden">
       <LandingSignedInRedirect />
@@ -264,7 +268,7 @@ export default function LandingPage() {
           </nav>
         </header>
 
-        <section className="grid min-h-[calc(100dvh-5rem)] gap-8 py-10 lg:grid-cols-[minmax(0,0.86fr)_minmax(520px,1.14fr)] lg:items-center lg:py-12">
+        <section className="grid min-h-[calc(100dvh-5rem)] gap-8 py-10 xl:grid-cols-[minmax(0,0.86fr)_minmax(520px,1.14fr)] xl:items-center xl:py-12">
           <div className="max-w-2xl">
             <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-border/80 bg-secondary px-3 py-1.5 text-xs font-medium text-muted-foreground">
               <span className="size-2 rounded-full bg-primary shadow-[0_0_10px_2px_var(--primary)]" />
@@ -288,11 +292,17 @@ export default function LandingPage() {
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link href="/book/demo-strategy-studio">
-                  View live demo
+                  {bookingsPaused ? "Explore demo" : "View live demo"}
                   <ExternalLink className="size-4" />
                 </Link>
               </Button>
             </div>
+
+            {demoAccess && (
+              <a href="#demo-access" className="mt-4 inline-block rounded-sm text-sm font-medium text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
+                Get a demo visitor login
+              </a>
+            )}
 
             <dl className="mt-10 grid gap-3 sm:grid-cols-3">
               <div className="rounded-md border border-border/80 bg-secondary/60 p-4">
@@ -321,10 +331,16 @@ export default function LandingPage() {
 
           <div className="relative min-w-0">
             <div className="absolute -inset-8 -z-10 bg-[radial-gradient(circle_at_70%_28%,color-mix(in_oklch,var(--primary)_24%,transparent),transparent_34%)]" />
-            <MiniBookingPagePreview />
+            <MiniBookingPagePreview bookingsPaused={bookingsPaused} />
           </div>
         </section>
       </StorefrontContainer>
+
+      {demoAccess && (
+        <StorefrontContainer className="pb-12">
+          <DemoVisitorAccess access={demoAccess} />
+        </StorefrontContainer>
+      )}
 
       <section className="border-y border-border/80 bg-surface-subtle/70 py-12">
         <StorefrontContainer>
@@ -382,7 +398,7 @@ export default function LandingPage() {
               <div className="min-w-0">
                 <p className="flex items-center gap-2 text-sm font-medium text-primary">
                   <Sparkles className="size-4" />
-                  Portfolio demo is ready locally
+                  Explore the portfolio demo
                 </p>
                 <h2 className="mt-2 font-display text-2xl font-semibold tracking-normal">
                   Open the seeded demo profile or create your own workspace.
@@ -396,7 +412,7 @@ export default function LandingPage() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/login">Login</Link>
+                  {demoAccess ? <a href="#demo-access">Demo login instructions</a> : <Link href="/login">Login</Link>}
                 </Button>
               </div>
             </div>

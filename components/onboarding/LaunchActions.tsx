@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import { Copy, ExternalLink, Share2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"

@@ -1,12 +1,15 @@
 "use client"
 
 import { SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/nextjs"
-import Link from "next/link"
+import { usePathname } from "next/navigation"
+import Link from "@/components/NavigationLink"
 
 import { Button } from "./ui/button"
 
 const PublicNavBar = () => {
   const { isLoaded, userId } = useAuth()
+  const pathname = usePathname()
+  const bookingReturnUrl = pathname.startsWith("/book/") ? pathname : undefined
   const isSignedIn = isLoaded && Boolean(userId)
 
   return (
@@ -30,10 +33,10 @@ const PublicNavBar = () => {
               </>
             ) : (
               <>
-                <SignInButton>
+                <SignInButton forceRedirectUrl={bookingReturnUrl} signUpForceRedirectUrl={bookingReturnUrl}>
                   <Button variant="ghost">Login</Button>
                 </SignInButton>
-                <SignUpButton>
+                <SignUpButton forceRedirectUrl={bookingReturnUrl} signInForceRedirectUrl={bookingReturnUrl}>
                   <Button variant="outline">Register</Button>
                 </SignUpButton>
               </>

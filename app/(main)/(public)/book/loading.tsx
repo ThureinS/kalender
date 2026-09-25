@@ -3,11 +3,12 @@ import {
   BookingIdentityRail,
   BookingPageSplit,
 } from "@/components/layout/product-surfaces"
+import { NavigationPending } from "@/components/NavigationProgress"
 
 function SkeletonLine({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`h-3 animate-pulse rounded-full bg-muted ${className}`}
+      className={`h-3 motion-safe:animate-pulse rounded-full bg-muted ${className}`}
       aria-hidden="true"
     />
   )
@@ -16,10 +17,11 @@ function SkeletonLine({ className = "" }: { className?: string }) {
 export default function BookingLoading() {
   return (
     <BookingPageSplit className="min-h-[calc(100dvh-6rem)] py-8">
+      <NavigationPending />
       <BookingIdentityRail className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-x-8 top-6 h-24 rounded-full bg-primary/20 blur-3xl" />
         <div className="relative">
-          <div className="size-16 animate-pulse rounded-full bg-primary/40 shadow-[0_0_36px_-10px_var(--primary)]" />
+          <div className="size-16 motion-safe:animate-pulse rounded-full bg-primary/40 shadow-[0_0_36px_-10px_var(--primary)]" />
           <SkeletonLine className="mt-6 w-24" />
           <SkeletonLine className="mt-4 h-8 w-48" />
           <SkeletonLine className="mt-5 w-full" />

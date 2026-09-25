@@ -1,92 +1,61 @@
-# Kalender UI overhaul handoff
+# Kalender: current handoff
 
-Read this file first for ongoing `ui-overhaul` work. It is the current source of
-truth; load detailed evidence or history only when relevant to the task.
-Updated September 17, 2026.
+Updated September 25, 2026. Operating rules: `AGENTS.md`.
 
-## Current handoff state
+## Current state
 
-- Branch: `ui-overhaul`. Implementation and dependency validation checkpoint:
-  `f810c64` (`Harden portfolio demo booking flow and validate dependencies`).
-- UI phases 1–8, onboarding, polished auth, demo seed tooling and local booking
-  history are implemented. Theme Lab routes are retired.
-- Product identity: Midnight Storefront, Daylight App Shell, Lime accent.
-  Owner accents apply to public Booking Pages, not the private workspace.
-- Public demo: `/book/demo-strategy-studio`. Seed contents were not refreshed
-  or inspected in the latest session.
-- Booking writes default to disabled. `testers` mode requires a signed-in Clerk
-  ID in `KALENDER_DEMO_BOOKER_IDS`. Reservations prevent owner-wide overlap;
-  deterministic Google event IDs support retries; success requires a stored receipt.
-- The architecture audit is implemented and validated. Do not repeat it.
-- Latest session scope: no browser work or deployment. No accounts, live data,
-  external configuration or credentials were changed. Git commits are local.
+- `ui-overhaul`, HEAD `914bf0e`; extensive uncommitted/untracked work. Preserve
+  it. No Git push or production promotion. Local dev runs on port 3000.
+- UI overhaul, theme toggle, loading feedback and visitor demo are implemented.
+  The architecture audit is complete; do not repeat it.
+- Local demo is enabled for the designated host only. Three shared visitor
+  logins, booking-page return and the pre-submit form were user-confirmed.
+  Instructions: `/#demo-access` and root README. Visitors need no Calendar
+  permission.
+- Host `accutility778@gmail.com` grants Calendar access through Integrations.
+  September 24 agent browser sign-out/sign-in returned to **Connected** on the
+  unchanged account; Calendar scopes and primary free/busy HTTP 200 were
+  verified. No booking or invitation was submitted.
 
-## Verified checks
+## Preview and validation
 
-September 17, Node 22.21.1 / npm 10.9.4:
-
-- Lockfile matches `package.json`; clean `npm ci` passes.
-- `npm audit`: zero known vulnerabilities, including development dependencies.
-- `npm run check`: zero-warning lint, 26 tests in five suites, typecheck,
-  production build and compiled action/retired-route checks all pass.
-- `git diff --check` and native Sharp image processing pass.
-- npm 11.19.1 was needed for lockfile repair after an npm 10 resolver failure.
-  Existing dependency deprecations and Webpack cache warnings are non-failing.
-- Tests mock Clerk/Google and use disposable PGlite. They do not prove real
-  sign-in, OAuth, invitations or browser behavior. Revalidate after code or
-  dependency changes; documentation-only edits do not require another full build.
-
-## Deployment facts and boundaries
-
-- Existing production: https://kalender-tau.vercel.app/; last verified September
-  16 at revision `687cb35`. The overhaul has not been deployed or pushed.
-- Agreed next target: a separate Vercel preview using development Clerk and the
-  existing Neon database. Preview isolates code, **not data**: old production
-  already shares Neon but uses another Clerk instance. Scope keys and owner IDs.
-- Migration 0004 is already applied. September 17 read-only metadata checks
-  confirmed migrations 0000–0004, reservations, the overlap constraint and
-  `btree_gist`. Do not repeat migration or reseed merely for deployment.
-- Keep Google OAuth in Testing mode. Confirm the Calendar host, Google test users
-  and reconnection plan before live QA. Clerk booking testers and Google OAuth
-  test users are separate lists.
-
-## Unresolved access decision
-
-The earlier plan called for publishing demo logins in the root README and linking
-from the landing page. Neither is implemented. Publishing an **allowlisted**
-login lets anyone send real Calendar invitations. The current gate has no
-specific host or guest-recipient restriction.
-
-Recommended, not yet accepted: separate disposable public exploration accounts
-that are **not** allowlisted, plus private allowlisted booking testers. Exploration
-accounts can still edit their own workspace; never share the connected Calendar
-host's login. Anonymous public-page browsing already needs no credentials.
-There is no read-only workspace role or simulated booking mode.
-
-`npm run demo:create-testers` is assigned to the user and has not been run by the
-agent. It reuses existing emails without changing or verifying their passwords,
-and prints booking-allowlist configuration for every account. Do not treat its
-output as proof of sign-in or as public exploration setup. Account inventory is
-unverified; do not assume accounts are absent.
+- Protected browse-only [Vercel Preview](https://kalender-foeqgfps5-thureinss-projects.vercel.app/)
+  is **Ready**. It was deployed directly from this working tree to the existing
+  `kalender` project, with one-off development Clerk/database overrides,
+  `KALENDER_BOOKING_MODE=disabled`, and no demo host ID. The variables were
+  attached to this deployment only; project-level branch variables were not
+  saved. Vercel Authentication redirects unauthenticated visitors.
+- Responsive fixes cover landing Workspace, public profile/event form,
+  App Shell navigation, and Booking Page editor. Local QA covered
+  320, 375, 768, 1024 and 1280 px. The Preview was checked at phone/tablet/
+  desktop widths, including demo account sign-in, Overview and Booking Page.
+  Paused copy is visible and confirmation disabled. No page overflow was found.
+- September 25 Node 22.21.1 `npm run check` passed once after the fixes: 56
+  tests, lint, types, build and compiled action checks. Dev was restarted with
+  fresh `.next` output. Production `main` revision `687cb35` still serves the
+  older UI at `kalender-tau.vercel.app`.
+- No real booking, invitation or inbox-delivery test. Preview shares the Neon
+  database with existing production, while using a different development Clerk
+  instance. No migration or reseed. See [preview review sheet](preview.md).
+- Burmese responses. Explain before Brave use. Preserve working-tree data and
+  keep secrets out of Git.
 
 ## Next session plan
 
-1. Decide public exploration versus real-booking access using the boundary above.
-   Then prepare the agreed accounts and verify sign-in when browser work resumes.
-2. Confirm the Calendar host/test users and prepare preview-scoped Vercel/Clerk
-   environment and callbacks. Keep shared-database implications explicit.
-3. Obtain deployment approval and deploy the reviewed preview. Browser QA remains
-   deferred until requested: cover landing, auth, onboarding, workspace, public
-   profile/event, OAuth, confirmation and history on desktop and mobile.
-4. For a real booking test, obtain action-time approval for recipient/time and
-   separate cleanup approval. Record preview URL, configuration and QA evidence.
-5. Decide promotion to production and the merge/push checkpoint after review.
+1. Before any Git push, create safe branch-specific Preview variables or an
+   equivalent isolated Git deployment path. Existing Clerk/database project
+   variables apply to all environments; a raw `ui-overhaul` push could inherit
+   production values. See [preview review sheet](preview.md).
+2. Decide separately whether to enable live demo bookings or promote the UI to
+   production. Real booking/invitation tests need a chosen recipient and cleanup.
 
-## Read only when needed
+## Read only when relevant
 
-- [Audit evidence, access review and booking reconciliation runbook](pre-deployment-audit.md).
-- [Archived design decisions, phase plans and session history](archive/ui-overhaul-2026-09-17.md).
-- [Owner accent theming ADR](../adr/0001-owner-scoped-accent-theming.md).
+- [Open backlog](backlog.md): pending checks and release decisions.
+- [Demo runbook](demo-visitors.md): instance/host IDs, visitor credentials, recovery.
+- [Preview review sheet](preview.md): deployment details and Git push guard.
+- [Audit/runbook](pre-deployment-audit.md): data/retry/security evidence.
+- [September 25 evidence](archive/ui-overhaul-2026-09-25.md): completed QA.
+- [Older design history](archive/ui-overhaul-2026-09-17.md): phases and decisions.
 
-Maintain this handoff by replacing stale status, not appending session transcripts.
-Keep detailed historical evidence in the archive or audit report.
+Keep this file under 450 words. Root README owns setup and visitor instructions.

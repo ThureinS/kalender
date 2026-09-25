@@ -30,6 +30,19 @@ it("reuses a provider event after a lost response without sending another invite
   expect(await createCalendarEvent(data)).toHaveProperty("id", "abc123")
   expect(mocks.insert).not.toHaveBeenCalled()
 })
+it("requests a Google invitation for the form email and labels demo Calendar events", async () => {
+  mocks.get.mockRejectedValueOnce({ code: 404 })
+  mocks.insert.mockResolvedValue({ data: { id: "abc123" } })
+  await createCalendarEvent({ ...data, isDemoBooking: true, guestNotes: "Trying the demo" })
+  expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({
+    calendarId: "primary", sendUpdates: "all",
+    requestBody: expect.objectContaining({
+      attendees: [{ email: data.guestEmail, displayName: data.guestName }],
+      summary: "[Demo] Guest: Consultation",
+      description: "Kalender demo booking: for testing only. No meeting will take place.\n\nTrying the demo",
+    }),
+  }), expect.any(Object))
+})
 it("inserts with a deterministic id and resolves concurrent retry conflicts", async () => {
   mocks.get.mockRejectedValueOnce({ code: 404 }).mockResolvedValueOnce({ data: { id: "abc123" } })
   mocks.insert.mockRejectedValue({ code: 409 })

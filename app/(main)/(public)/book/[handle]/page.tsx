@@ -1,3 +1,4 @@
+import { isDemoBookingHost } from "@/server/bookingAccess"
 import PublicProfile from "@/components/PublicProfile"
 import { getPublicEvents } from "@/server/queries/events"
 import { getSchedule } from "@/server/queries/schedule"
@@ -21,6 +22,8 @@ export default async function PublicProfilePage({
     getSchedule(profile.clerkUserId),
   ])
   const hasAvailability = (schedule?.availabilities.length ?? 0) > 0
+  const isDemoHost = isDemoBookingHost(profile.clerkUserId)
+  const bookingsPaused = process.env.KALENDER_BOOKING_MODE !== "demo" || !isDemoHost
 
   // Render PublicProfile component
   return (
@@ -28,6 +31,8 @@ export default async function PublicProfilePage({
       profile={profile}
       events={events}
       hasAvailability={hasAvailability}
+      isDemoHost={isDemoHost}
+      bookingsPaused={bookingsPaused}
     />
   )
 }

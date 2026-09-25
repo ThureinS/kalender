@@ -5,14 +5,13 @@ import {
   LinkIcon,
   ShieldCheck,
 } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import type { ReactNode } from "react"
 
 import {
   StorefrontContainer,
   StorefrontSurface,
 } from "@/components/layout/product-surfaces"
-import LandingSignedInRedirect from "@/components/LandingSignedInRedirect"
 
 type AuthPageShellProps = {
   children: ReactNode
@@ -47,7 +46,6 @@ export default function AuthPageShell({
 }: AuthPageShellProps) {
   return (
     <StorefrontSurface>
-      <LandingSignedInRedirect />
       <StorefrontContainer>
         <main className="grid min-h-dvh gap-6 py-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.75fr)] lg:items-center lg:gap-8 lg:py-8">
           <section className="order-2 flex flex-col justify-between gap-8 rounded-lg border border-border/80 bg-surface-subtle/55 p-5 sm:p-6 lg:order-1 lg:min-h-[calc(100dvh-4rem)] lg:p-8">

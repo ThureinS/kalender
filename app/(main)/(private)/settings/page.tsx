@@ -19,7 +19,7 @@ import {
   ShieldCheck,
   UserRound,
 } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import type { ReactNode } from "react"
 
 function SettingLink({

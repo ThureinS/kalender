@@ -1,4 +1,5 @@
-import { canCreateBooking } from "@/server/bookingAccess"
+import { getBookingAccess, isDemoBookingHost } from "@/server/bookingAccess"
+import DemoBookingNotice from "@/components/DemoBookingNotice"
 import { BOOKING_HORIZON_DAYS } from "@/lib/availability"
 import { ArrowLeft, CalendarDays, Clock, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import {
@@ -14,7 +15,7 @@ import {
   BookingIdentityRail,
   BookingPageSplit,
 } from "@/components/layout/product-surfaces";
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
 import { Button } from "@/components/ui/button";
 import { formatEventDescription } from "@/lib/formatters";
 import { getProfileAccentStyle } from "@/lib/profileAccent";
@@ -46,6 +47,7 @@ export default async function BookingPage({
       redirect(`/book/${profile.handle}/${canonicalEventSlug}`)
     }
 
+    const isDemoHost = isDemoBookingHost(profile.clerkUserId)
     const calendarUser = { id: profile.clerkUserId, fullName: profile.displayName }
 
     const schedule = await getSchedule(profile.clerkUserId)
@@ -57,6 +59,7 @@ export default async function BookingPage({
           <NoTimeSlots
             event={event}
             calendarUser={calendarUser}
+            isDemoHost={isDemoHost}
             profileHandle={profile.handle}
             eventSlug={canonicalEventSlug}
             reason="availability-not-set"
@@ -70,6 +73,7 @@ export default async function BookingPage({
         <NoTimeSlots
           event={event}
           calendarUser={calendarUser}
+          isDemoHost={isDemoHost}
           profileHandle={profile.handle}
           eventSlug={canonicalEventSlug}
         />
@@ -85,7 +89,8 @@ export default async function BookingPage({
     const endDate = addDays(new Date(), BOOKING_HORIZON_DAYS)
 
      // Generate valid available time slots for the event using the custom scheduler logic
-  const bookingEnabled = await canCreateBooking()
+  const bookingAccess = await getBookingAccess(profile.clerkUserId)
+  const bookingsPaused = bookingAccess === "disabled" || bookingAccess === "other-host"
   const validTimes = await getValidTimesForEventRange({
     start: startDate,
     end: endDate,
@@ -98,6 +103,7 @@ export default async function BookingPage({
       <NoTimeSlots
         event={event}
         calendarUser={calendarUser}
+        isDemoHost={isDemoHost}
         profileHandle={profile.handle}
         eventSlug={canonicalEventSlug}
       />
@@ -151,13 +157,14 @@ export default async function BookingPage({
               </div>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="size-4 text-primary" />
-                Confirmation after details
+                {bookingsPaused ? "Booking preview" : "Confirmation after details"}
               </div>
             </div>
           </div>
         </BookingIdentityRail>
 
         <BookingContentColumn>
+          {isDemoHost && !bookingsPaused && <DemoBookingNotice />}
           <div className="rounded-lg border border-border/80 bg-card p-5 text-card-foreground shadow-[0_0_36px_-24px_var(--primary)] sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -170,7 +177,7 @@ export default async function BookingPage({
               </div>
               <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/80 px-3 py-1.5 text-xs text-muted-foreground">
                 <ShieldCheck className="size-3.5 text-primary" />
-                Live availability
+                {bookingsPaused ? "Availability preview" : "Live availability"}
               </div>
             </div>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -179,7 +186,7 @@ export default async function BookingPage({
           </div>
 
           <MeetingForm
-              bookingEnabled={bookingEnabled}
+            bookingAccess={bookingAccess}
             validTimes={validTimes}
             eventId={event.id}
             clerkUserId={profile.clerkUserId}

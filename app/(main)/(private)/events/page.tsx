@@ -5,7 +5,7 @@ import { getEvents } from "@/server/queries/events";
 import { getOrCreateProfile } from "@/server/queries/profiles";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { CalendarPlus, CalendarRange } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
 
 export default async function EventsPage() {
     // Get the authenticated user's ID

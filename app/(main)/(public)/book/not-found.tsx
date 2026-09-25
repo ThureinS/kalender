@@ -5,7 +5,7 @@ import {
 } from "@/components/layout/product-surfaces"
 import { Button } from "@/components/ui/button"
 import { CalendarX2, Home, Search } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 
 export default function BookingNotFound() {
   return (

@@ -15,7 +15,7 @@ const RegisterPage = () => {
         fallbackRedirectUrl="/onboarding"
         path="/register"
         routing="path"
-        signInFallbackRedirectUrl="/login"
+        signInFallbackRedirectUrl="/overview"
         signInUrl="/login"
       />
     </AuthPageShell>

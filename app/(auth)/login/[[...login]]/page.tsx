@@ -15,7 +15,7 @@ const LoginPage = () => {
         fallbackRedirectUrl="/overview"
         path="/login"
         routing="path"
-        signUpFallbackRedirectUrl="/register"
+        signUpFallbackRedirectUrl="/onboarding"
         signUpUrl="/register"
       />
     </AuthPageShell>

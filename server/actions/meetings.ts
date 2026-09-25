@@ -1,6 +1,6 @@
 "use server"
 
-import { canCreateBooking } from "@/server/bookingAccess"
+import { getBookingAccess } from "@/server/bookingAccess"
 import { createHash } from "node:crypto"
 import { addDays } from "date-fns"
 import { db } from "@/drizzle/db"
@@ -15,10 +15,15 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 export async function createMeeting(unsafeData: z.infer<typeof meetingActionSchema>) {
-  if (!await canCreateBooking()) return { error: "Live bookings are limited to approved demo testers." } as const
   const parsed = meetingActionSchema.safeParse(unsafeData)
   if (!parsed.success) return { error: "Check your booking details and try again." } as const
   const data = parsed.data
+  const access = await getBookingAccess(data.clerkUserId)
+  if (access !== "allowed") return {
+    error: access === "sign-in-required"
+      ? "Sign in to try a booking with the demo host."
+      : "Live demo bookings are not available for this host.",
+  } as const
   const { requestId, ...request } = data
   const requestHash = createHash("sha256").update(JSON.stringify(request)).digest("hex")
   try {
@@ -59,6 +64,7 @@ export async function createMeeting(unsafeData: z.infer<typeof meetingActionSche
       },
       createCalendarEvent: reservation => createCalendarEvent({
         ...reservation.payload, clerkUserId: reservation.clerkUserId,
+        isDemoBooking: true,
         startTime: new Date(reservation.payload.startTime),
         durationInMinutes: reservation.payload.eventDurationInMinutes,
         calendarEventId: requestId.replaceAll("-", ""),

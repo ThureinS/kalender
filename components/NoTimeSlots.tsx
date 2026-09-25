@@ -1,4 +1,5 @@
-import Link from "next/link";
+import DemoBookingNotice from "./DemoBookingNotice";
+import Link from "@/components/NavigationLink";
 import { Button } from "./ui/button";
 import {
   BookingContentColumn,
@@ -15,6 +16,7 @@ export default function NoTimeSlots({
     profileHandle,
     eventSlug,
     reason = "no-slots",
+    isDemoHost = false,
   }: {
     event: {
       name: string
@@ -26,6 +28,7 @@ export default function NoTimeSlots({
     profileHandle: string
     eventSlug: string
     reason?: "no-slots" | "availability-not-set"
+    isDemoHost?: boolean
   }) {
     const hostName = calendarUser.fullName || "Kalender host"
     const availabilityNotSet = reason === "availability-not-set"
@@ -77,6 +80,7 @@ export default function NoTimeSlots({
         </BookingIdentityRail>
 
         <BookingContentColumn>
+          {isDemoHost && <DemoBookingNotice />}
           <div className="rounded-lg border border-border/80 bg-card p-8 text-card-foreground shadow-[0_0_36px_-24px_var(--primary)]">
             <div className="flex size-12 items-center justify-center rounded-full border border-border/80 bg-background text-primary">
               <CalendarX2 className="size-6" />

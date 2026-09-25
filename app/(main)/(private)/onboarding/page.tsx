@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import { headers } from "next/headers"
 import {
   AlertTriangle,

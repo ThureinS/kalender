@@ -26,7 +26,7 @@ import {
   MapPin,
   UserRound,
 } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 
 function BookingHistorySection({
   title,

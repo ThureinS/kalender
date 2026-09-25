@@ -3,14 +3,16 @@
 "use client"
 import { meetingFormSchema } from "@/schema/meetings"
 import { createMeeting } from "@/server/actions/meetings"
+import type { BookingAccess } from "@/server/bookingAccess"
+import { SignInButton } from "@clerk/nextjs"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { formatInTimeZone, toZonedTime } from "date-fns-tz"
-import { useRouter } from "next/navigation"
+import { useNavigationRouter } from "@/components/NavigationProgress"
 import type { ReactNode } from "react"
 import { useEffect, useMemo, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { formatDate, formatTimeString, formatTimezoneOffset } from "@/lib/formatters"
 import { Button } from "../ui/button"
@@ -20,7 +22,7 @@ import { Calendar } from "../ui/calendar"
 import { isSameDay } from "date-fns"
 import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import Booking from "../Booking"
 
  // Enables client-side rendering for this component
@@ -58,13 +60,13 @@ function BookingStep({
 
 export default function MeetingForm({
     validTimes,
-    bookingEnabled,
+    bookingAccess,
     eventId,
     clerkUserId,
     profileHandle,
     eventSlug,
   }: {
-    bookingEnabled: boolean
+    bookingAccess: BookingAccess
     validTimes: Date[] // Predefined list of available times
     eventId: string     // ID of the event to associate with the meeting
     clerkUserId: string // User ID from authentication system
@@ -72,7 +74,7 @@ export default function MeetingForm({
     eventSlug: string
   }) {
 
-    const router = useRouter()
+    const router = useNavigationRouter()
     const requestId = useRef<string | null>(null)
     const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
     const defaultDate = validTimes[0]
@@ -104,8 +106,9 @@ export default function MeetingForm({
     const startTime = form.watch("startTime")
     const guestName = form.watch("guestName")
     const guestEmail = form.watch("guestEmail")
+    const bookingsPaused = bookingAccess === "disabled" || bookingAccess === "other-host"
     const canSubmit =
-      bookingEnabled &&
+      bookingAccess === "allowed" &&
       Boolean(startTime) &&
       guestName.trim().length > 0 &&
       z.string().email().safeParse(guestEmail).success
@@ -172,10 +175,23 @@ export default function MeetingForm({
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="flex flex-col gap-5"
               >
-                {!bookingEnabled && (
-                  <p className="rounded-md border border-border bg-muted p-3 text-sm text-muted-foreground">
-                    Portfolio preview. Live bookings are limited to approved demo testers.
-                  </p>
+                {bookingAccess !== "allowed" && (
+                  <div className="rounded-md border border-border bg-muted p-3 text-sm text-muted-foreground">
+                    <p>{bookingAccess === "sign-in-required"
+                      ? "Sign in with a demo account or your own account to try a booking."
+                      : bookingAccess === "other-host"
+                        ? "You can explore this page. Test bookings are available only with the designated demo host."
+                        : "You can explore this page. Live demo bookings are currently paused."}</p>
+                    {bookingAccess === "sign-in-required" && (
+                      <SignInButton
+                        mode="modal"
+                        forceRedirectUrl={`/book/${profileHandle}/${eventSlug}`}
+                        signUpForceRedirectUrl={`/book/${profileHandle}/${eventSlug}`}
+                      >
+                        <Button type="button" className="mt-3">Sign in to try booking</Button>
+                      </SignInButton>
+                    )}
+                  </div>
                 )}
                 {/* Show root error message if form submission fails */}
                 {form.formState.errors.root && (
@@ -202,7 +218,9 @@ export default function MeetingForm({
                 <BookingStep
                   icon={<Globe2 className="size-4" />}
                   title="Confirm your timezone"
-                  description="Available slots are adjusted to your local time before you book."
+                  description={bookingsPaused
+                    ? "Available slots are adjusted to your local time for this preview."
+                    : "Available slots are adjusted to your local time before you book."}
                 >
                   <FormField
                     control={form.control}
@@ -302,6 +320,7 @@ export default function MeetingForm({
                                         key={time.toISOString()}
                                         type="button"
                                         variant={selected ? "default" : "outline"}
+                                        aria-label={formatInTimeZone(time, timezone, "h:mm a zzz")}
                                         className={cn(
                                           "h-11 justify-between font-mono",
                                           selected &&
@@ -309,7 +328,7 @@ export default function MeetingForm({
                                         )}
                                         onClick={() => field.onChange(time)}
                                       >
-                                        {formatInTimeZone(time, timezone, "h:mm a zzz")}
+                                        {formatInTimeZone(time, timezone, "h:mm a")}
                                         {selected && <Check className="size-4" />}
                                       </Button>
                                     )
@@ -328,9 +347,11 @@ export default function MeetingForm({
                 <BookingStep
                   icon={<UserRound className="size-4" />}
                   title="Add your details"
-                  description="The host will receive your contact information and notes."
+                  description={bookingsPaused
+                    ? "You can explore this form, but your details will not be submitted."
+                    : "The host will receive your contact information and notes."}
                 >
-                <div className="flex flex-col gap-4 md:flex-row">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
                   {/* Guest name input */}
                   <FormField
                     control={form.control}
@@ -356,6 +377,11 @@ export default function MeetingForm({
                         <FormControl>
                           <Input type="email" placeholder="jane@example.com" {...field} />
                         </FormControl>
+                        <FormDescription>
+                          {bookingsPaused
+                            ? "This preview will not submit your details or send an invitation."
+                            : "To test the Google Calendar invitation, enter your own real email address. You can do this while signed in with a demo account."}
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -383,17 +409,19 @@ export default function MeetingForm({
                 </BookingStep>
 
                 {/* Cancel and Submit buttons */}
-                <div className="flex flex-col gap-4 rounded-lg border border-border/80 bg-surface-subtle/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-4 rounded-lg border border-border/80 bg-surface-subtle/30 p-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="flex min-w-0 items-start gap-3 text-sm">
                     <Mail className="mt-0.5 size-4 shrink-0 text-primary" />
                     <div className="min-w-0">
                       <p className="font-medium text-foreground">
                         {startTime
                           ? `${formatDate(toZonedTime(startTime, timezone))} at ${formatTimeString(toZonedTime(startTime, timezone))}`
-                          : "Select a time to finish booking"}
+                          : bookingsPaused ? "Select a time to explore the form" : "Select a time to finish booking"}
                       </p>
                       <p className="mt-1 text-muted-foreground">
-                        A confirmation email will be sent after booking.
+                        {bookingsPaused
+                          ? "Booking confirmation is unavailable in this preview."
+                          : "Google Calendar will be asked to send an invitation to the email you enter."}
                       </p>
                     </div>
                   </div>
@@ -410,7 +438,7 @@ export default function MeetingForm({
                     disabled={form.formState.isSubmitting || !canSubmit}
                     type="submit"
                   >
-                    Confirm booking
+                    {bookingsPaused ? "Booking paused" : "Confirm booking"}
                   </Button>
                   </div>
                 </div>

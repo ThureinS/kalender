@@ -72,7 +72,6 @@ export function BookingContentColumn({ children, className }: SurfaceProps) {
 export function AppShellSurface({ children, className }: SurfaceProps) {
   return (
     <div
-      data-kalender-theme="daylight"
       className={cn("min-h-dvh bg-app-shell-background text-foreground", className)}
     >
       {children}

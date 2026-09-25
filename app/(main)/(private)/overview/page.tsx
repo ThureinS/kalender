@@ -29,7 +29,7 @@ import {
   LinkIcon,
   Settings2,
 } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import type { ReactNode } from "react"
 
 type OverviewProfile = {

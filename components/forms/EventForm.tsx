@@ -17,8 +17,8 @@ import {
     ShieldCheck,
     Trash2,
 } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import Link from "@/components/NavigationLink"
+import { useNavigationRouter } from "@/components/NavigationProgress"
 import { useMemo, useTransition } from "react"
 import { useForm, type Resolver } from "react-hook-form"
 import { z } from "zod"
@@ -83,7 +83,7 @@ export default function EventForm({
     submitLabel = "Save Event",
 }: EventFormProps) {
     const [isDeletePending, startDeleteTransition] = useTransition()
-    const router = useRouter()
+    const router = useNavigationRouter()
 
     const form = useForm<FormValues>({
         resolver,

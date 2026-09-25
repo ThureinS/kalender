@@ -1,3 +1,5 @@
+import DemoBookingNotice from "@/components/DemoBookingNotice"
+import { isDemoBookingHost } from "@/server/bookingAccess"
 import { z } from "zod"
 import { getBookingReceipt } from "@/server/queries/bookings"
 
@@ -19,7 +21,7 @@ import {
   MapPin,
   Sparkles,
 } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
 import { notFound } from "next/navigation";
 
 export default async function SuccessPage({
@@ -56,7 +58,8 @@ export default async function SuccessPage({
           </h1>
 
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            A confirmation email is on its way with the calendar details for this meeting.
+            Your booking is saved. Google Calendar was asked to send an invitation
+            to the email address you entered.
           </p>
 
           <div className="mt-6 space-y-3 border-t border-border/80 pt-6 text-sm text-muted-foreground">
@@ -77,6 +80,7 @@ export default async function SuccessPage({
       </BookingIdentityRail>
 
       <BookingContentColumn>
+        {isDemoBookingHost(profile.clerkUserId) && <DemoBookingNotice />}
         <div className="rounded-lg border border-border/80 bg-card p-8 text-card-foreground shadow-[0_0_36px_-24px_var(--primary)]">
           <div className="flex size-12 items-center justify-center rounded-full border border-border/80 bg-background text-primary">
             <CalendarCheck2 className="size-6" />
@@ -88,16 +92,19 @@ export default async function SuccessPage({
             {new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: booking.timezone }).format(booking.startTime)} ({booking.timezone})
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-            Keep an eye on your inbox for the confirmation and calendar invite. You can safely close this page.
+            If you used your own real email address, check your inbox and spam folder
+            for the Google Calendar invitation. You can safely close this page.
           </p>
 
           <div className="mt-6 rounded-lg border border-border/80 bg-surface-subtle/30 p-4 text-sm text-muted-foreground">
             <div className="flex items-start gap-3">
               <Mail className="mt-0.5 size-4 shrink-0 text-primary" />
               <div>
-                <p className="font-medium text-foreground">Confirmation sent</p>
+                <p className="font-medium text-foreground">Google Calendar invitation</p>
                 <p className="mt-1 leading-6">
-                  The host receives your details, and you receive the meeting information by email.
+                  Booking confirmation does not verify email delivery. Shared demo
+                  login addresses do not provide an inbox; use your own real email
+                  in the booking form to test invitations.
                 </p>
               </div>
             </div>

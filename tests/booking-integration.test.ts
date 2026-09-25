@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, afterAll, expect, it, vi } from "vitest"
+import { beforeAll, beforeEach, afterAll, afterEach, expect, it, vi } from "vitest"
 import { randomUUID } from "node:crypto"
 import { readFile } from "node:fs/promises"
 import { PGlite } from "@electric-sql/pglite"
@@ -41,10 +41,11 @@ beforeAll(async () => {
   }
 }, 30000)
 afterAll(async () => { await pg.close() })
+afterEach(() => vi.unstubAllEnvs())
 beforeEach(async () => {
   vi.clearAllMocks()
-  vi.stubEnv("KALENDER_BOOKING_MODE", "testers")
-  vi.stubEnv("KALENDER_DEMO_BOOKER_IDS", "user_tester")
+  vi.stubEnv("KALENDER_BOOKING_MODE", "demo")
+  vi.stubEnv("KALENDER_DEMO_HOST_CLERK_USER_ID", owner)
   mocks.auth.mockResolvedValue({ userId: "user_tester" })
   mocks.busy.mockResolvedValue([])
   mocks.calendar.mockImplementation(async (data: { calendarEventId: string }) => ({ id: data.calendarEventId }))
@@ -111,15 +112,59 @@ it("prevents unauthenticated and cross-owner event/profile mutations", async () 
   expect((await database.query.EventTable.findFirst())?.name).toBe("Demo")
 })
 
-it("keeps demo writes disabled by default and enforces the tester allowlist", async () => {
-  vi.stubEnv("KALENDER_BOOKING_MODE", "disabled")
+it.each([undefined, "disabled", "testers", "unknown"])("blocks writes for mode %s, including the retired tester allowlist", async mode => {
+  vi.stubEnv("KALENDER_BOOKING_MODE", mode)
+  vi.stubEnv("KALENDER_DEMO_BOOKER_IDS", "user_tester")
   expect(await createMeeting(request())).toHaveProperty("error")
-  vi.stubEnv("KALENDER_BOOKING_MODE", "testers")
-  mocks.auth.mockResolvedValue({ userId: "unapproved" })
-  expect(await createMeeting(request())).toHaveProperty("error")
-  mocks.auth.mockResolvedValue({ userId: null })
-  expect(await createMeeting(request())).toHaveProperty("error")
+  expect(mocks.busy).not.toHaveBeenCalled()
   expect(mocks.calendar).not.toHaveBeenCalled()
+  expect(await database.query.BookingReservationTable.findMany()).toHaveLength(0)
+})
+
+it.each([undefined, "", "   ", "another-host"])("blocks writes when the configured demo host is %s", async hostId => {
+  vi.stubEnv("KALENDER_DEMO_HOST_CLERK_USER_ID", hostId)
+  expect(await createMeeting(request())).toHaveProperty("error")
+  expect(mocks.busy).not.toHaveBeenCalled()
+  expect(mocks.calendar).not.toHaveBeenCalled()
+  expect(await database.query.BookingReservationTable.findMany()).toHaveLength(0)
+})
+
+it("requires sign-in before any Calendar lookup or reservation", async () => {
+  mocks.auth.mockResolvedValue({ userId: null })
+  expect(await createMeeting(request())).toEqual({ error: "Sign in to try a booking with the demo host." })
+  expect(mocks.busy).not.toHaveBeenCalled()
+  expect(mocks.calendar).not.toHaveBeenCalled()
+  expect(await database.query.BookingReservationTable.findMany()).toHaveLength(0)
+})
+
+it.each(["user_shared_demo", "user_new_visitor"])("lets %s book the demo host using an independently entered guest email", async userId => {
+  mocks.auth.mockResolvedValue({ userId })
+  const data = request()
+  expect(await createMeeting(data)).toEqual({ bookingId: data.requestId })
+  expect(mocks.calendar).toHaveBeenCalledWith(expect.objectContaining({
+    clerkUserId: owner, guestEmail: data.guestEmail, isDemoBooking: true,
+  }))
+})
+
+it("rejects another host's event even when the caller spoofs the configured host ID", async () => {
+  const [other] = await database.insert(schema.EventTable).values({
+    name: "Other host", clerkUserId: "another-host", durationInMinutes: 30, visibility: "public",
+  }).returning()
+  expect(await createMeeting({ ...request(), eventId: other.id, clerkUserId: "another-host" })).toHaveProperty("error")
+  expect(await createMeeting({ ...request(), eventId: other.id })).toHaveProperty("error")
+  expect(mocks.busy).not.toHaveBeenCalled()
+  expect(mocks.calendar).not.toHaveBeenCalled()
+  expect(await database.query.BookingReservationTable.findMany()).toHaveLength(0)
+})
+
+it("rechecks host configuration before retrying an uncertain reservation", async () => {
+  const data = request()
+  mocks.calendar.mockRejectedValueOnce(new Error("response lost"))
+  expect(await createMeeting(data)).toHaveProperty("error")
+  vi.stubEnv("KALENDER_DEMO_HOST_CLERK_USER_ID", "another-host")
+  expect(await createMeeting(data)).toHaveProperty("error")
+  expect(mocks.calendar).toHaveBeenCalledTimes(1)
+  expect(await database.query.BookingReservationTable.findMany()).toHaveLength(1)
 })
 
 it("saves availability and timezone together, scoped to the authenticated owner", async () => {

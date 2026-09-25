@@ -14,7 +14,7 @@ import { Button } from "../ui/button"
 import { Plus, X } from "lucide-react"
 import { Input } from "../ui/input"
 import { saveSchedule } from "@/server/actions/schedule"
-import { useRouter } from "next/navigation"
+import { useNavigationRouter } from "@/components/NavigationProgress"
 import { appToast } from "@/lib/app-toast"
 
 // Define the Availability type
@@ -37,7 +37,7 @@ export function ScheduleForm({
     }
     requireAvailability?: boolean
 }) {
-    const router = useRouter()
+    const router = useNavigationRouter()
 
     // Initialize form with validation schema and default values
     const form = useForm<z.infer<typeof scheduleFormSchema>>({

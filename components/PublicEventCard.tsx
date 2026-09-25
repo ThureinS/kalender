@@ -1,6 +1,6 @@
 import { formatEventDescription } from "@/lib/formatters"
 import type { PublicEvent } from "@/server/queries/events"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import { ArrowRight, Clock, MapPin } from "lucide-react"
 
 // Type definition for event card props
@@ -8,6 +8,8 @@ type PublicEventCardProps = {
     profileHandle: string
     event: PublicEvent
     bookingDisabled?: boolean
+    bookingsPaused?: boolean
+    isDemoEvent?: boolean
   }
 
 // Component to display a single event card
@@ -15,6 +17,8 @@ export default  function PublicEventCard({
     profileHandle,
     event,
     bookingDisabled = false,
+    bookingsPaused = false,
+    isDemoEvent = false,
     }: PublicEventCardProps) {
         const className = bookingDisabled
           ? "grid gap-4 rounded-lg border border-border/80 bg-card/60 p-5 text-card-foreground opacity-75 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
@@ -27,6 +31,7 @@ export default  function PublicEventCard({
                 <h3 className="break-words font-display text-xl font-semibold tracking-normal">
                   {event.name}
                 </h3>
+                {isDemoEvent && <span className="text-xs font-medium text-primary">Demo event</span>}
               </div>
               {event.description && (
                 <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -45,12 +50,12 @@ export default  function PublicEventCard({
               </div>
             </div>
             <div className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md border border-border/80 bg-background px-3 text-sm font-medium text-foreground transition-colors group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
-              {bookingDisabled ? "Availability needed" : "Book"}
+              {bookingDisabled ? "Availability needed" : bookingsPaused ? "View event" : "Book"}
               {!bookingDisabled && (
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               )}
               <span className="sr-only">
-                {bookingDisabled ? `${event.name} is not available to book` : `Select ${event.name}`}
+                {bookingDisabled ? `${event.name} is not available to book` : bookingsPaused ? `Explore ${event.name}` : `Select ${event.name}`}
               </span>
             </div>
           </>

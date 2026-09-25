@@ -6,6 +6,19 @@ working tree describe the state at verification time. For current status and
 next steps, read the short [handoff](README.md). Do not load this entire report
 for routine session startup.
 
+Later access decision: the user accepted real booking trials by shared demo and
+real signed-in accounts, restricted to the `accutility778@gmail.com` host, with
+clear test labels and guidance to enter one's own real guest email to test Google
+Calendar invitations, including from a shared demo login. No separate mailing
+service or synthetic-address suppression mode is planned. This supersedes the
+pending recommendation below. September 19 implementation now uses `demo` mode,
+a configured host Clerk ID and any signed-in caller; profile/flow/receipt copy
+and new Calendar events are clearly labeled as demos. Local demo mode was enabled
+only after September 19 host reauthorization and a successful read-only Google
+Calendar check. Preview configuration, guest-login scope separation and live
+booking/inbox QA remain outstanding. See the current handoff for current
+validation and remaining steps; findings below are historical evidence.
+
 The audit continues the existing `ui-overhaul` working tree. Theme Lab removal
 and earlier documentation changes are preserved. During the September 16 audit,
 nothing was deployed, pushed, seeded, or migrated against Neon. No real invitation

@@ -5,7 +5,7 @@ import { isProfileAccent } from "@/lib/profileAccent"
 import { getOrCreateProfile } from "@/server/queries/profiles"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { ExternalLink } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 
 export default async function BookingPageSettingsPage() {
   const { userId, redirectToSignIn } = await auth()

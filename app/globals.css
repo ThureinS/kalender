@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *, [data-kalender-theme="midnight"], [data-kalender-theme="midnight"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -72,6 +72,35 @@
 }
 
 /* ============ Production Theme Tokens ============ */
+.kalender-navigation-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 100;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  background: color-mix(in oklch, var(--kalender-lime-strong) 15%, transparent);
+}
+
+.kalender-navigation-progress-bar {
+  height: 100%;
+  width: 35%;
+  background: var(--kalender-lime-strong);
+  animation: kalender-navigation-progress 1.2s ease-in-out infinite;
+}
+
+@keyframes kalender-navigation-progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(290%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kalender-navigation-progress-bar {
+    animation: none;
+    width: 100%;
+  }
+}
+
 :root {
   --font-geist-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -88,8 +117,9 @@
   --kalender-lime-strong: oklch(0.64 0.207 131.7);
 }
 
-:root,
+.light,
 [data-kalender-theme="daylight"] {
+  color-scheme: light;
   --radius: 0.5rem;
   --background: var(--kalender-daylight);
   --foreground: oklch(0.21 0.006 285.82);
@@ -132,8 +162,10 @@
   --sidebar-ring: var(--kalender-lime-strong);
 }
 
+:root:not(.light),
 .dark,
 [data-kalender-theme="midnight"] {
+  color-scheme: dark;
   --radius: 0.5rem;
   --background: var(--kalender-midnight);
   --foreground: oklch(0.985 0 0);
@@ -233,12 +265,25 @@
 }
 
 .kalender-auth .cl-socialButtonsBlockButton,
-.kalender-auth .cl-formFieldInput {
+.kalender-auth .cl-formFieldInput,
+.kalender-auth .cl-otpCodeFieldInput {
   border: 1px solid color-mix(in oklch, var(--border) 80%, transparent) !important;
   border-radius: var(--radius-sm) !important;
   background: var(--background) !important;
   color: var(--foreground) !important;
   box-shadow: none !important;
+}
+
+.kalender-auth .cl-otpCodeFieldInput {
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground) !important;
+}
+
+.kalender-auth .cl-badge {
+  background: var(--secondary) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+  opacity: 1;
 }
 
 .kalender-auth .cl-formFieldInput::placeholder {

@@ -3,7 +3,7 @@
 import Image from "next/image"
 
 import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
   CheckCircle2,
@@ -146,8 +146,8 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
   }
 
   return (
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <Card>
+    <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle>Public Identity</CardTitle>
           <CardDescription>
@@ -215,7 +215,7 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
                         />
                       </FormControl>
                       <FormDescription>
-                        Sets your Public URL at {origin || "this site"}/book/link-name.
+                        Sets the last part of your Public URL: /book/link-name.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -339,7 +339,7 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
                     {publicUrl || publicPath}
                   </p>
                 </div>
-                <div className="flex shrink-0 gap-2">
+                <div className="flex flex-wrap gap-2 sm:shrink-0">
                   <Button type="button" variant="outline" onClick={copyPublicUrl}>
                     <Copy className="size-4" />
                     Copy
@@ -361,7 +361,7 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
         </CardContent>
       </Card>
 
-      <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
+      <aside className="min-w-0 xl:sticky xl:top-28 xl:self-start">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -416,8 +416,8 @@ export default function BookingPageForm({ profile }: BookingPageFormProps) {
                   {preview.timezone}
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-border/80 px-3 py-1.5 font-mono text-xs">
-                  <span className="size-2 rounded-full bg-primary shadow-[0_0_8px_2px_var(--primary)]" />
-                  Open for scheduling
+                  <span className="size-2 rounded-full bg-muted-foreground/45" />
+                  Appearance preview
                 </div>
               </div>
             </div>

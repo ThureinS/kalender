@@ -6,8 +6,9 @@ import { useAuth } from "@clerk/nextjs"
 import type { PublicEvent } from "@/server/queries/events"
 import type { UserProfile } from "@/server/queries/profiles"
 import { CalendarX2, CheckCircle2, Clock3, Copy, Globe2, LinkIcon, MapPin } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import { Button } from "./ui/button"
+import DemoBookingNotice from "./DemoBookingNotice"
 import PublicEventCard from "./PublicEventCard"
 import {
   BookingContentColumn,
@@ -22,12 +23,16 @@ type PublicProfileProps = {
   profile: UserProfile
   events: PublicEvent[]
   hasAvailability: boolean
+  isDemoHost?: boolean
+  bookingsPaused?: boolean
 }
 
 export default function PublicProfile({
   profile,
   events,
   hasAvailability,
+  isDemoHost = false,
+  bookingsPaused = false,
 }: PublicProfileProps) {
   const { isLoaded, userId } = useAuth()
   const isOwner = isLoaded && userId === profile.clerkUserId
@@ -102,8 +107,8 @@ export default function PublicProfile({
                   {events.length} active {events.length === 1 ? "event" : "events"}
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-border/80 px-3 py-1.5 font-mono text-xs">
-                  <span className={`size-2 rounded-full ${hasAvailability ? "bg-primary shadow-[0_0_8px_2px_var(--primary)]" : "bg-muted-foreground/45"}`} />
-                  {hasAvailability ? "Open for scheduling" : "Availability not set"}
+                  <span className={`size-2 rounded-full ${hasAvailability && !bookingsPaused ? "bg-primary shadow-[0_0_8px_2px_var(--primary)]" : "bg-muted-foreground/45"}`} />
+                  {!hasAvailability ? "Availability not set" : bookingsPaused ? "Bookings paused" : "Open for scheduling"}
                 </div>
               </div>
 
@@ -121,6 +126,12 @@ export default function PublicProfile({
           </BookingIdentityRail>
 
           <BookingContentColumn>
+            {isDemoHost && !bookingsPaused && <DemoBookingNotice />}
+            {bookingsPaused && hasAvailability && (
+              <div className="rounded-lg border border-border/80 bg-muted/50 p-4 text-sm text-muted-foreground">
+                You can explore these events. Booking confirmation is currently paused.
+              </div>
+            )}
             <div className="rounded-lg border border-border/80 bg-card p-5 text-card-foreground shadow-[0_0_36px_-24px_var(--primary)] sm:p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
@@ -128,7 +139,7 @@ export default function PublicProfile({
                     Available Events
                   </p>
                   <h2 className="mt-2 font-display text-2xl font-semibold tracking-normal">
-                    Choose a time to meet
+                    {bookingsPaused ? "Explore events" : "Choose a time to meet"}
                   </h2>
                 </div>
                 <div className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border border-border/80 px-3 py-1.5 text-xs text-muted-foreground">
@@ -184,7 +195,9 @@ export default function PublicProfile({
                       key={event.id}
                       profileHandle={profile.handle}
                       event={event}
+                      isDemoEvent={isDemoHost}
                       bookingDisabled={!hasAvailability}
+                      bookingsPaused={bookingsPaused}
                     />
                 ))}
               </div>

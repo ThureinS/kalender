@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises"
 const manifest = JSON.parse(await readFile(".next/server/server-reference-manifest.json", "utf8"))
 const allowed = new Set([
   "createMeeting", "createEvent", "updateEvent", "deleteEvent", "saveSchedule", "updateCurrentUserProfile",
+  "rememberCalendarConnection", "shouldRestoreCalendarConnection",
   // Actions supplied by the installed Clerk SDK.
   "deleteKeylessAction", "invalidateCacheAction",
 ])

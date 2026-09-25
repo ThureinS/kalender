@@ -1,10 +1,17 @@
 import "server-only"
 import { auth } from "@clerk/nextjs/server"
 
-export async function canCreateBooking() {
-  if (process.env.KALENDER_BOOKING_MODE !== "testers") return false
-  const approvedIds = (process.env.KALENDER_DEMO_BOOKER_IDS ?? "").split(",").map(id => id.trim()).filter(Boolean)
-  if (!approvedIds.length) return false
+export type BookingAccess = "allowed" | "disabled" | "other-host" | "sign-in-required"
+
+export function isDemoBookingHost(clerkUserId: string) {
+  const hostId = process.env.KALENDER_DEMO_HOST_CLERK_USER_ID?.trim()
+  return Boolean(hostId && clerkUserId === hostId)
+}
+
+export async function getBookingAccess(clerkUserId: string): Promise<BookingAccess> {
+  // Missing configuration and the retired "testers" mode both fail closed.
+  if (process.env.KALENDER_BOOKING_MODE !== "demo") return "disabled"
+  if (!isDemoBookingHost(clerkUserId)) return "other-host"
   const { userId } = await auth()
-  return Boolean(userId && approvedIds.includes(userId))
+  return userId ? "allowed" : "sign-in-required"
 }

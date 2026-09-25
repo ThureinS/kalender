@@ -13,9 +13,10 @@ import {
     SlidersHorizontal,
     Unplug,
 } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
 import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type NavIcon = ComponentType<{ className?: string }>
 
@@ -35,7 +36,6 @@ export default function PrivateNavBar() {
     return (
         <>
             <aside
-                data-kalender-theme="daylight"
                 className="hidden min-h-dvh w-64 shrink-0 border-r border-sidebar-border bg-app-shell-background px-4 py-5 text-sidebar-foreground lg:flex lg:flex-col"
             >
                 <div className="flex items-center justify-between gap-3">
@@ -45,7 +45,10 @@ export default function PrivateNavBar() {
                     >
                         Kalender
                     </Link>
-                    <UserButton />
+                    <div className="flex items-center gap-1">
+                        <ThemeToggle />
+                        <UserButton />
+                    </div>
                 </div>
 
                 <div className="mt-8">
@@ -76,7 +79,6 @@ export default function PrivateNavBar() {
             </aside>
 
             <header
-                data-kalender-theme="daylight"
                 className="sticky top-0 z-40 border-b border-sidebar-border bg-app-shell-background/95 px-4 py-3 text-sidebar-foreground backdrop-blur sm:px-6 lg:hidden"
             >
                 <div className="flex items-center justify-between gap-4">
@@ -86,11 +88,14 @@ export default function PrivateNavBar() {
                     >
                         Kalender
                     </Link>
-                    <UserButton />
+                    <div className="flex items-center gap-1">
+                        <ThemeToggle />
+                        <UserButton />
+                    </div>
                 </div>
                 <nav
                     aria-label="Workspace"
-                    className="-mx-4 mt-3 flex gap-1 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6"
+                    className="-mx-4 mt-3 flex gap-1 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:flex-wrap sm:overflow-visible sm:px-6"
                 >
                     {PrivateNavLinks.map((item) => {
                         const isActive = pathname === item.route || pathname.startsWith(`${item.route}/`);
@@ -111,6 +116,9 @@ export default function PrivateNavBar() {
                         );
                     })}
                 </nav>
+                <p className="mt-1 text-right text-[11px] text-sidebar-foreground/55 sm:hidden">
+                    Swipe to see more pages →
+                </p>
             </header>
         </>
     )

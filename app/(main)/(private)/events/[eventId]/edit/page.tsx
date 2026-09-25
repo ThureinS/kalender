@@ -5,7 +5,7 @@ import { getEvent } from "@/server/queries/events"
 import { getOrCreateProfile } from "@/server/queries/profiles"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { AlertTriangle } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 
 // The default exported async function for the EditEventPage
 export default async function EditEventPage({
