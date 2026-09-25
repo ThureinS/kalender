@@ -64,3 +64,15 @@
   copy, mobile profile/event layout and disabled confirmation. Demo Tester 1
   signed in on Preview; Overview and Booking Page fit phone/tablet/desktop,
   with Settings visible in tablet navigation. No booking or invitation was sent.
+- Git-backed Preview setup: committed a temporary `vercel.json` guard that
+  disabled auto-deploy for `ui-overhaul`, then pushed the new remote branch.
+  Vercel created no deployment on that push. Saved eight branch-specific
+  Preview variables: development database/Clerk, Clerk routes and disabled
+  booking mode; database and secret key were stored as sensitive, and the host
+  ID was unset. Pulled branch settings confirmed public values and mode without
+  exposing secrets. Removed the guard, committed/pushed the overhaul, and
+  Vercel automatically built a Ready Preview at the stable
+  [branch URL](https://kalender-git-ui-overhaul-thureinss-projects.vercel.app/).
+  Anonymous requests redirect to Vercel SSO. Brave confirmed the landing,
+  paused profile/event and disabled confirmation; Demo Tester 1 signed in and
+  returned to Overview. Production was unchanged; no booking or invite sent.

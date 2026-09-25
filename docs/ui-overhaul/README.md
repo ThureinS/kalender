@@ -4,8 +4,8 @@ Updated September 25, 2026. Operating rules: `AGENTS.md`.
 
 ## Current state
 
-- `ui-overhaul`, HEAD `914bf0e`; extensive uncommitted/untracked work. Preserve
-  it. No Git push or production promotion. Local dev runs on port 3000.
+- `ui-overhaul` is pushed to `origin` and the working tree is clean. No
+  production promotion. Local dev runs on port 3000.
 - UI overhaul, theme toggle, loading feedback and visitor demo are implemented.
   The architecture audit is complete; do not repeat it.
 - Local demo is enabled for the designated host only. Three shared visitor
@@ -19,12 +19,12 @@ Updated September 25, 2026. Operating rules: `AGENTS.md`.
 
 ## Preview and validation
 
-- Protected browse-only [Vercel Preview](https://kalender-foeqgfps5-thureinss-projects.vercel.app/)
-  is **Ready**. It was deployed directly from this working tree to the existing
-  `kalender` project, with one-off development Clerk/database overrides,
-  `KALENDER_BOOKING_MODE=disabled`, and no demo host ID. The variables were
-  attached to this deployment only; project-level branch variables were not
-  saved. Vercel Authentication redirects unauthenticated visitors.
+- Protected browse-only [Git-backed Preview](https://kalender-git-ui-overhaul-thureinss-projects.vercel.app/)
+  is **Ready** on `ui-overhaul`. Eight branch-specific Preview variables provide
+  development Clerk, the shared Neon database, redirects and
+  `KALENDER_BOOKING_MODE=disabled`; no demo host ID is set. Database and Clerk
+  secret are sensitive variables. Vercel Authentication redirects anonymous
+  visitors. The prior direct CLI deployment remains historical.
 - Responsive fixes cover landing Workspace, public profile/event form,
   App Shell navigation, and Booking Page editor. Local QA covered
   320, 375, 768, 1024 and 1280 px. The Preview was checked at phone/tablet/
@@ -34,6 +34,8 @@ Updated September 25, 2026. Operating rules: `AGENTS.md`.
   tests, lint, types, build and compiled action checks. Dev was restarted with
   fresh `.next` output. Production `main` revision `687cb35` still serves the
   older UI at `kalender-tau.vercel.app`.
+- Git Preview smoke test: landing/profile/event loaded, confirmation remained
+  disabled, and a demo visitor signed in to Overview. No booking was submitted.
 - No real booking, invitation or inbox-delivery test. Preview shares the Neon
   database with existing production, while using a different development Clerk
   instance. No migration or reseed. See [preview review sheet](preview.md).
@@ -42,10 +44,8 @@ Updated September 25, 2026. Operating rules: `AGENTS.md`.
 
 ## Next session plan
 
-1. Before any Git push, create safe branch-specific Preview variables or an
-   equivalent isolated Git deployment path. Existing Clerk/database project
-   variables apply to all environments; a raw `ui-overhaul` push could inherit
-   production values. See [preview review sheet](preview.md).
+1. Review the Git-backed Preview and decide whether browse-only is sufficient
+   for portfolio sharing; Vercel Authentication limits access to the team.
 2. Decide separately whether to enable live demo bookings or promote the UI to
    production. Real booking/invitation tests need a chosen recipient and cleanup.
 

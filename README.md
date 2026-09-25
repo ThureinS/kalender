@@ -7,7 +7,7 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 ## Portfolio Demo Status
 
 The overhaul is available locally and on a protected, browse-only
-[Vercel Preview](https://kalender-foeqgfps5-thureinss-projects.vercel.app/).
+[Vercel Preview](https://kalender-git-ui-overhaul-thureinss-projects.vercel.app/).
 The original production app remains at
 [kalender-tau.vercel.app](https://kalender-tau.vercel.app/).
 See the short [current handoff](docs/ui-overhaul/README.md) for verified status
