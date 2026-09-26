@@ -43,12 +43,15 @@ Updated September 26, 2026. Operating rules: `AGENTS.md`.
   visitor reached confirmation readiness. Bangkok 8 PM converted to GMT 1 PM;
   no booking submitted. Brave was left signed out at the visitor panel.
 - Prior authorized Calendar/booking/timezone/receipt test and cleanup passed.
-  Do not repeat it. Distinct guest inbox delivery is optional/unverified.
+  Do not repeat it. A newly authorized distinct-guest Production invitation test
+  confirmed the booking and Calendar attendee; event, booking and reservation
+  cleanup passed. Guest Inbox/Spam confirmation is pending; do not resend.
 
 ## Next steps
 
 - Optional follow-up: add the stable Production link to the CV when supplied;
-  invitation delivery needs a distinct owned recipient and explicit test approval.
+  record the guest's delivery confirmation when received. Any further invitation
+  test needs an exact owned recipient and explicit test/cleanup approval.
 - [Release checklist](release.md); [unfinished work](backlog.md);
   [September 26 evidence](archive/ui-overhaul-2026-09-26.md).
 - CV later; stable Production is its destination. Rollback: disable demo mode

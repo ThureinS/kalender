@@ -148,3 +148,26 @@ recipient `accutility778@gmail.com` and exact cleanup were authorized.
 - Required release work complete. Application gate reused because execution
   changed only external configuration and documentation. CV and distinct inbox
   delivery remain optional follow-ups.
+
+## Distinct guest Production invitation follow-up
+
+- The user supplied a distinct owned Gmail recipient in response to the explicit
+  invitation-test offer. Used Brave and the stable Production URL, with existing
+  Demo Visitor 1; no new account, auth setting or application changes.
+- Submitted one Portfolio Review booking for September 28, 2026 at 8 PM
+  Asia/Bangkok, under the synthetic name `Invitation Delivery Test`. Notes and
+  Calendar description explicitly said that no meeting would take place.
+- Persisted receipt `ef149020-95ad-4529-a396-1fdc1b88a838` passed. Read-only checks
+  confirmed one booking and reservation for the live demo host, the exact
+  supplied recipient, and the deterministic Google event with `confirmed`
+  status and one matching attendee (`needsAction`). The application requested
+  Google invitation delivery through its existing `sendUpdates=all` path.
+- Actual Inbox/Spam arrival requires the user's confirmation. Asked once and
+  did not send another booking. Email field values were omitted by text
+  inspection; screenshot verification confirmed the exact recipient before
+  submission. Automated input retries happened only before submission.
+- Cleanup cancelled only this verified test event (`sendUpdates=all`, HTTP 204),
+  then verified cancellation and removed exactly its booking and reservation in
+  one database transaction. Final counts for this request were zero/zero;
+  unrelated data was preserved. A guest cancellation notice was also requested.
+- No application/dependency changes: the existing release gate remains valid.
