@@ -6,13 +6,12 @@ and Clerk credentials to the existing Vercel project for Preview. The
 is Ready on `ui-overhaul`, using branch-specific overrides. Production remains
 on `main`. The earlier direct CLI Preview is historical.
 
-## Existing Vercel project, verified September 25
+## Existing Vercel project, verified September 26
 
 - [kalender](https://vercel.com/thureinss-projects/kalender) is linked to
-  `ThureinS/kalender`. Its current production deployment is **Ready**, from
-  `main` revision `687cb35` (August 26). The
-  [live URL](https://kalender-tau.vercel.app) loaded the older Clerk sign-in
-  page on September 25.
+  `ThureinS/kalender`. Production is **Ready** on `main` after PR #2 merged the
+  overhaul. The [live URL](https://kalender-tau.vercel.app) now runs demo mode;
+  release validation is in the [release checklist](release.md).
 - The project has a default Preview environment for nonproduction branches.
   `DATABASE_URL`, both Clerk keys and default sign-in/up URLs are scoped to
   **All Environments**. Production force redirects were split on September 26
@@ -61,8 +60,8 @@ on `main`. The earlier direct CLI Preview is historical.
 | `disabled` | Public pages and form can be explored; confirmation is disabled; the optional ticket panel needs an explicitly configured visitor registry. | No booking writes or invitations. |
 | `demo` | Matching-instance visitor login and booking submission are available. | Any signed-in visitor can invite the entered guest address on the configured host. New source caps reservations at 500/host per rolling 24 hours with no account cap; guest-email ownership is not verified. |
 
-The protected Preview uses `disabled`. The existing local demo stays in `demo`
-mode. New controls are local and uncommitted, not deployed to this Preview.
+The protected Preview uses `disabled` and passed its build on `f418e9a`, including
+the new controls. The local demo and released Production use `demo` mode.
 
 ## Before and after publishing
 

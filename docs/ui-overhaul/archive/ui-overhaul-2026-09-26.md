@@ -130,3 +130,21 @@ recipient `accutility778@gmail.com` and exact cleanup were authorized.
   Workspace shows Ready to share, setup 4/4. No real booking repeated.
 - Production-only booking mode changed from disabled to demo for next deployment.
   No other environment scope, keys, database data or Preview protection changed.
+
+- Host sign-out/identity-only sign-in restored Calendar scopes automatically
+  without another consent screen. Backend confirmed both scopes and the saved
+  connection preference.
+- Demo mode deployed on `5733a3f`, deployment
+  `9MuVtVjNkP2y8uMpDdDFeGTDYmsz` Ready with stable alias. Anonymous root,
+  profile and event routes returned HTTP 200. Live mode notice and three visitor
+  buttons present; no Calendar unavailable or application-error state.
+- Final Brave QA: anonymous filled draft kept confirmation disabled with sign-in
+  guidance; shared visitor 1 opened the active form without a password/OTP/grant
+  and reached enabled confirmation with synthetic QA details. Changed timezone
+  from Bangkok to GMT: 8 PM became 1 PM, with slot reselection required. Active
+  Booking Page passed 375px/1024px overflow and visual checks. No confirmation
+  clicked, reservation/event/invitation created or cleanup required. QA session
+  signed out; browser viewport restored; stable visitor panel left open.
+- Required release work complete. Application gate reused because execution
+  changed only external configuration and documentation. CV and distinct inbox
+  delivery remain optional follow-ups.
