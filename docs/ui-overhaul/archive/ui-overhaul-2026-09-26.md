@@ -171,3 +171,11 @@ recipient `accutility778@gmail.com` and exact cleanup were authorized.
   one database transaction. Final counts for this request were zero/zero;
   unrelated data was preserved. A guest cancellation notice was also requested.
 - No application/dependency changes: the existing release gate remains valid.
+
+### Guest delivery confirmation
+
+The user supplied an inbox screenshot showing the matching `[Demo] Invitation
+Delivery Test: Portfolio Review` invitation at 21:02 and its cancellation at
+21:04, both from Utility Acc. This confirms receipt of both messages by the
+specified guest inbox. Invitation delivery and cleanup are complete; no further
+booking or resend is needed.

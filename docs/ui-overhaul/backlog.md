@@ -8,7 +8,5 @@ Current state: [handoff](README.md). Completed evidence:
 
 - [ ] Add the stable [Production URL](https://kalender-tau.vercel.app/) to the CV
   when the CV is supplied. Public Preview is not needed.
-- [ ] Record whether the authorized distinct guest received the Production test
-  invitation in Inbox/Spam. Await the user's reply; do not create another booking.
 
 Protected Preview remains internal QA only. See [release checklist](release.md).

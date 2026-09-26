@@ -99,6 +99,6 @@ were preserved. Mode change was applied by a fresh Git-backed deployment. Scope 
    needed. Do not reseed or delete unrelated shared data.
 
 Public Preview is optional. CV should use stable Production URL after live QA.
-Guest inbox delivery awaits the user's confirmation of the authorized distinct
-guest test. Do not resend it. Any additional invitation test needs an explicitly
-authorized recipient and cleanup. Completed evidence is in the dated archive.
+Distinct guest invitation and cancellation delivery are verified by the user's
+inbox screenshot. This test is complete; do not repeat it. Any additional test
+needs an explicitly authorized recipient and cleanup. Evidence is in the archive.
