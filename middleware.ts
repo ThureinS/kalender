@@ -17,6 +17,8 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
+    // Establish context for the public demo sign-in action on the landing page.
+    "/",
     // Establish Clerk context on booking routes for approved tester actions.
     // Public pages still do not require sign-in.
     "/((?!$|login(?:/.*)?|register(?:/.*)?|sso-callback(?:/.*)?|_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",

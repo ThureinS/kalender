@@ -5,6 +5,7 @@ const manifest = JSON.parse(await readFile(".next/server/server-reference-manife
 const allowed = new Set([
   "createMeeting", "createEvent", "updateEvent", "deleteEvent", "saveSchedule", "updateCurrentUserProfile",
   "rememberCalendarConnection", "shouldRestoreCalendarConnection",
+  "createDemoVisitorSignIn",
   // Actions supplied by the installed Clerk SDK.
   "deleteKeylessAction", "invalidateCacheAction",
 ])

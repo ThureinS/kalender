@@ -1,6 +1,6 @@
 # Separate Vercel preview: review sheet
 
-Updated September 25, 2026. The user approved sending the development database
+Updated September 26, 2026. The user approved sending the development database
 and Clerk credentials to the existing Vercel project for Preview. The
 [Git-backed Preview](https://kalender-git-ui-overhaul-thureinss-projects.vercel.app/)
 is Ready on `ui-overhaul`, using branch-specific overrides. Production remains
@@ -14,13 +14,14 @@ on `main`. The earlier direct CLI Preview is historical.
   [live URL](https://kalender-tau.vercel.app) loaded the older Clerk sign-in
   page on September 25.
 - The project has a default Preview environment for nonproduction branches.
-  `DATABASE_URL`, both Clerk keys and the Clerk route variables are scoped to
-  **All Environments**. Branch-specific Preview variables now override these
-  values for `ui-overhaul`; other branches still inherit the global settings.
+  `DATABASE_URL`, both Clerk keys and default sign-in/up URLs are scoped to
+  **All Environments**. Production force redirects were split on September 26
+  to preserve Preview/Development values. Branch-specific overrides still
+  supply `ui-overhaul`; other branches inherit their default Preview settings.
 - Vercel Authentication is enabled for preproduction deployments. A visitor
-  outside the Vercel team needs an approved sharing/access route before testing
-  that project's preview. The dashboard did not offer permission to change
-  this protection.
+  outside the Vercel team needs an approved sharing/access route before testing.
+  No public access exception has been saved. Public Preview is optional internal
+  QA; the portfolio/CV target is Production after final live verification.
 - Git pushes to `ui-overhaul` now trigger Preview deployments with the saved
   [branch-specific variables](https://vercel.com/docs/environment-variables).
 
@@ -57,12 +58,11 @@ on `main`. The earlier direct CLI Preview is historical.
 
 | Mode | Visitor experience | External effect |
 | --- | --- | --- |
-| `disabled` | Public pages and form can be explored; the shared-login panel is hidden and confirmation is disabled. | No booking writes or invitations. |
-| `demo` | Shared visitor login and booking submission are available. | Any signed-in visitor can create a real event on the configured host calendar and invite an arbitrary address. There is no per-visitor rate limit or guest-email ownership check. |
+| `disabled` | Public pages and form can be explored; confirmation is disabled; the optional ticket panel needs an explicitly configured visitor registry. | No booking writes or invitations. |
+| `demo` | Matching-instance visitor login and booking submission are available. | Any signed-in visitor can invite the entered guest address on the configured host. New source caps reservations at 500/host per rolling 24 hours with no account cap; guest-email ownership is not verified. |
 
 The protected Preview uses `disabled`. The existing local demo stays in `demo`
-mode. Keep `disabled` for broader review until controls for live submissions
-are chosen and implemented.
+mode. New controls are local and uncommitted, not deployed to this Preview.
 
 ## Before and after publishing
 
@@ -70,6 +70,7 @@ CLI authentication and the `.vercel` project link work. The Git deployment was
 inspected as Preview/Ready, and an anonymous request redirects to Vercel SSO.
 Brave showed the landing, seeded profile, paused event form, disabled
 confirmation and demo-account sign-in to Overview. No real booking or
-invitation was submitted. A real booking, invitation and inbox test requires a
-separately agreed recipient and
-cleanup scope. Production promotion is a separate decision.
+invitation was submitted on Preview. September 26 authorized **local** booking
+creation/receipt and cleanup passed; inbox delivery remains unverified. See the
+[release checklist](release.md) for Production preparation and remaining gates.
+Production promotion is a separate approval.

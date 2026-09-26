@@ -91,11 +91,20 @@ export default async function BookingPage({
      // Generate valid available time slots for the event using the custom scheduler logic
   const bookingAccess = await getBookingAccess(profile.clerkUserId)
   const bookingsPaused = bookingAccess === "disabled" || bookingAccess === "other-host"
-  const validTimes = await getValidTimesForEventRange({
-    start: startDate,
-    end: endDate,
-    event,
-  })
+  let validTimes: Date[]
+  try {
+    validTimes = await getValidTimesForEventRange({ start: startDate, end: endDate, event })
+  } catch {
+    // Missing grants or a different Clerk instance must not crash a public
+    // demo page or present unverified times as bookable.
+    return (
+      <div style={getProfileAccentStyle(profile.accent)}>
+        <NoTimeSlots event={event} calendarUser={calendarUser}
+          profileHandle={profile.handle} eventSlug={canonicalEventSlug}
+          reason="calendar-unavailable" />
+      </div>
+    )
+  }
 
    // If no valid time slots are available, show a message and an option to pick another event
    if (validTimes.length === 0) {

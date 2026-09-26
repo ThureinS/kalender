@@ -22,6 +22,7 @@ import LandingSignedInRedirect from "@/components/LandingSignedInRedirect"
 import { Button } from "@/components/ui/button"
 import DemoVisitorAccess from "@/components/DemoVisitorAccess"
 import { getDemoVisitorAccess } from "@/server/demoVisitorAccess"
+import { getDemoProfilePath } from "@/server/demoBookingPage"
 
 const bookingEvents = [
   {
@@ -121,7 +122,7 @@ function MiniBookingPagePreview({ bookingsPaused }: { bookingsPaused: boolean })
               </div>
               <span className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border/80 px-3 py-1.5 text-xs text-muted-foreground">
                 <LinkIcon className="size-3.5 shrink-0 text-primary" />
-                <span className="truncate">/book/demo-strategy-studio</span>
+                <span className="truncate">{getDemoProfilePath()}</span>
               </span>
             </div>
           </div>
@@ -243,6 +244,7 @@ function WorkspacePreview() {
 
 export default function LandingPage() {
   const demoAccess = getDemoVisitorAccess()
+  const demoProfilePath = getDemoProfilePath()
   const bookingsPaused = process.env.KALENDER_BOOKING_MODE !== "demo"
   return (
     <StorefrontSurface className="overflow-hidden">
@@ -291,7 +293,7 @@ export default function LandingPage() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/book/demo-strategy-studio">
+                <Link href={demoProfilePath}>
                   {bookingsPaused ? "Explore demo" : "View live demo"}
                   <ExternalLink className="size-4" />
                 </Link>
@@ -406,7 +408,7 @@ export default function LandingPage() {
               </div>
               <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
                 <Button asChild>
-                  <Link href="/book/demo-strategy-studio">
+                  <Link href={demoProfilePath}>
                     Demo profile
                     <ExternalLink className="size-4" />
                   </Link>

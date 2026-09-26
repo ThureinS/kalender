@@ -14,6 +14,7 @@ import {
 type GoogleCalendarConnectButtonProps = {
   connected: boolean
   hasCalendarScopes?: boolean
+  sharedDemoVisitor?: boolean
 }
 
 function hasGoogleCalendarScope(approvedScopes: string) {
@@ -25,12 +26,14 @@ function hasGoogleCalendarScope(approvedScopes: string) {
 export function GoogleCalendarConnectButton({
   connected,
   hasCalendarScopes = false,
+  sharedDemoVisitor = false,
 }: GoogleCalendarConnectButtonProps) {
   const { user } = useUser()
   const clerk = useClerk()
   const [isConnecting, setIsConnecting] = useState(false)
 
   async function connectGoogle() {
+    if (sharedDemoVisitor) return
     if (!user) {
       appToast.error("Sign in before connecting Google Calendar.")
       return
@@ -82,6 +85,13 @@ export function GoogleCalendarConnectButton({
       setIsConnecting(false)
     }
   }
+
+  if (sharedDemoVisitor) return (
+    <p className="rounded-md border border-border bg-surface-subtle p-4 text-sm leading-6 text-muted-foreground">
+      This is a shared demo visitor account. Keep your personal Google account
+      separate; the demo host&apos;s Calendar handles guest bookings.
+    </p>
+  )
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row">

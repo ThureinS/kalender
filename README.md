@@ -16,16 +16,24 @@ contains setup and visitor instructions; session history lives in the archive.
 
 ## Try the local demo
 
-Open [demo visitor instructions](http://localhost:3000/#demo-access) while signed
-out, or go directly to [Portfolio Review](http://localhost:3000/book/demo-strategy-studio/portfolio-review).
-These accounts belong to the configured development Clerk instance; they do not
-work on the existing production site. No registration or Calendar connection is needed.
+Open [demo visitor access](http://localhost:3000/#demo-access) while signed
+out and choose **Demo Visitor 1, 2 or 3**. With the visitor registry configured,
+you sign in and open Portfolio Review without registration, a password, email
+verification or a Google Calendar connection. Existing signed-in visitors keep
+their own account. The development accounts do not work on the old live site.
 
-1. On Portfolio Review, select **Login** in the header.
-2. Sign in with any visitor email below and the shared password.
-3. If asked to check your email, enter **424242**; no inbox is needed.
-4. After login, you return to Portfolio Review. Explore timezone, date, time and
-   form fields without submitting a booking.
+These accounts are shared. Keep personal information out of their profiles.
+Submitting a booking creates a real test Calendar event and asks Google to send
+an invitation, although no meeting takes place. Use your own inbox in the form.
+The demo permits **500 new reservations across the host per rolling 24 hours**,
+with **no per-account cap**. Original retries remain possible; uncertain
+reservations count until reconciled. Booking confirmation is paused in
+`disabled` mode.
+
+### Development password fallback
+
+When the optional ticket registry is unset, development demo mode shows these
+intentionally public fallback credentials:
 
 | Visitor | Email |
 | --- | --- |
@@ -35,15 +43,14 @@ work on the existing production site. No registration or Calendar connection is 
 
 Shared demo-only password: `Aa9!Tv__ZajQ_8U4xfxuDWMYcqbU`
 
-These credentials are intentionally public and for shared visitor accounts only.
-Keep personal information out of their profiles. Booking submission creates a
-real Calendar event and sends an invitation, although no meeting takes place.
-For an intended booking, use your own inbox in the form, not the shared login email.
+Open [Portfolio Review](http://localhost:3000/book/demo-strategy-studio/portfolio-review),
+select **Login**, and enter a visitor email/password. Use **424242** if prompted
+for development email verification; no inbox is needed. You return to that event.
+These fallback credentials are hidden with live Clerk keys.
 
-The landing-page instructions appear only in demo mode with the verified demo
-host and matching development Clerk instance. They are now in local source;
-this does not deploy or publish the overhaul to the live site.
-See [demo visitor setup](docs/ui-overhaul/demo-visitors.md) for maintainer details.
+Source changes do not deploy the overhaul to the live site.
+See [demo visitor setup](docs/ui-overhaul/demo-visitors.md) for configuration,
+account safeguards and Production setup.
 
 ## 🚀 Tech Stack
 
@@ -124,6 +131,9 @@ See [demo visitor setup](docs/ui-overhaul/demo-visitors.md) for maintainer detai
    `KALENDER_DEMO_BOOKER_IDS` is no longer used. Shared demo logins are visitors,
    not the Calendar host. Enter your own real email in the booking form to test
    Google Calendar invitations; the login email can stay a demo address.
+   Set `KALENDER_DEMO_PROFILE_HANDLE` to that host's public handle to point the
+   landing demo links at the correct profile. Development and Production Clerk
+   identities need separate profiles when sharing a database.
 
    Google sign-in should request only identity scopes in Clerk's Google
    connection. Hosts grant Calendar permissions separately through Integrations.

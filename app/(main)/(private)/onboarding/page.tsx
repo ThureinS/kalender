@@ -418,6 +418,7 @@ export default async function OnboardingPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <GoogleCalendarConnectButton
+                  sharedDemoVisitor={user?.privateMetadata.kalenderDemoVisitor === true}
                   connected={Boolean(googleAccount)}
                   hasCalendarScopes={hasCalendarScopes}
                 />

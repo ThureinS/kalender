@@ -1,6 +1,8 @@
 "use server"
 
 import { getBookingAccess } from "@/server/bookingAccess"
+import { auth } from "@clerk/nextjs/server"
+import { DEMO_BOOKING_LIMIT_MESSAGE } from "@/lib/demo-booking-limits"
 import { createHash } from "node:crypto"
 import { addDays } from "date-fns"
 import { db } from "@/drizzle/db"
@@ -8,7 +10,7 @@ import { meetingActionSchema } from "@/schema/meetings"
 import { BOOKING_HORIZON_DAYS, conflictRange } from "@/lib/availability"
 import { completeBooking } from "@/lib/booking-workflow"
 import { getValidTimesForEventRange } from "@/server/queries/schedule"
-import { getReservation, reserveBooking } from "@/server/queries/reservations"
+import { DemoBookingLimitError, getReservation, reserveBooking } from "@/server/queries/reservations"
 import { createCalendarEvent } from "@/server/google/googleCalendar"
 import { createConfirmedBooking } from "@/server/queries/bookings"
 import { revalidatePath } from "next/cache"
@@ -24,10 +26,16 @@ export async function createMeeting(unsafeData: z.infer<typeof meetingActionSche
       ? "Sign in to try a booking with the demo host."
       : "Live demo bookings are not available for this host.",
   } as const
+  const { userId: bookerClerkUserId } = await auth()
+  if (!bookerClerkUserId) return { error: "Sign in to try a booking with the demo host." } as const
   const { requestId, ...request } = data
   const requestHash = createHash("sha256").update(JSON.stringify(request)).digest("hex")
   try {
     const priorReservation = await getReservation(requestId)
+    if (priorReservation?.payload.bookerClerkUserId &&
+        priorReservation.payload.bookerClerkUserId !== bookerClerkUserId) {
+      return { error: "Sign in with the account that started this booking to retry it." } as const
+    }
     if (priorReservation && priorReservation.requestHash !== requestHash) {
       return { error: "This attempt already has different details. Retry the original details or contact the host before starting another booking." } as const
     }
@@ -60,7 +68,7 @@ export async function createMeeting(unsafeData: z.infer<typeof meetingActionSche
             eventDurationInMinutes: event.durationInMinutes, eventLocation: event.location,
             guestName: data.guestName, guestEmail: data.guestEmail, guestNotes: data.guestNotes,
             timezone: data.timezone, startTime: data.startTime.toISOString() },
-        })
+        }, bookerClerkUserId)
       },
       createCalendarEvent: reservation => createCalendarEvent({
         ...reservation.payload, clerkUserId: reservation.clerkUserId,
@@ -81,7 +89,8 @@ export async function createMeeting(unsafeData: z.infer<typeof meetingActionSche
     })
     revalidatePath("/bookings")
     return { bookingId: booking.id } as const
-  } catch {
+  } catch (error) {
+    if (error instanceof DemoBookingLimitError) return { error: DEMO_BOOKING_LIMIT_MESSAGE } as const
     // Do not log raw provider/database errors: they can contain tokens, SQL and
     // guest data. The request id is sufficient for operator reconciliation.
     console.error("Booking could not be confirmed", { requestId })

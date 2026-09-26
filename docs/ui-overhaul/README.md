@@ -1,61 +1,57 @@
 # Kalender: current handoff
 
-Updated September 25, 2026. Operating rules: `AGENTS.md`.
+Updated September 26, 2026. Operating rules: `AGENTS.md`.
 
 ## Current state
 
-- `ui-overhaul` is pushed to `origin` and the working tree is clean. No
-  production promotion. Local dev runs on port 3000.
-- UI overhaul, theme toggle, loading feedback and visitor demo are implemented.
-  The architecture audit is complete; do not repeat it.
-- Local demo is enabled for the designated host only. Three shared visitor
-  logins, booking-page return and the pre-submit form were user-confirmed.
-  Instructions: `/#demo-access` and root README. Visitors need no Calendar
-  permission.
-- Host `accutility778@gmail.com` grants Calendar access through Integrations.
-  September 24 agent browser sign-out/sign-in returned to **Connected** on the
-  unchanged account; Calendar scopes and primary free/busy HTTP 200 were
-  verified. No booking or invitation was submitted.
+- Branch `ui-overhaul`; September 26 release preparation is uncommitted.
+  UI/responsive overhaul and architecture audit are complete. Do not repeat
+  the audit. Burmese responses; announce Brave use.
+- User selected option 10: **no account cap, 500 new reservations per host per
+  rolling 24 hours**. Atomic admission, uncertain-attempt counting and original
+  retry ownership remain. Calendar failures show controlled unavailable state.
+- Three local shared visitor buttons now use short-lived Clerk tickets. Brave
+  verified each returned to Portfolio Review without password, OTP or Calendar
+  grant. Shared visitor Calendar controls show guidance. Maintainer setup:
+  [demo runbook](demo-visitors.md); public instructions in root README.
+- Authorized local Calendar/booking/timezone/receipt test and cleanup passed.
+  Event deleted, booking canceled, reservation removed, slot verified free.
+  Inbox delivery is unverified: recipient equals organizer; Gmail had no match.
 
-## Preview and validation
+## Hosting and Production preparation
 
-- Protected browse-only [Git-backed Preview](https://kalender-git-ui-overhaul-thureinss-projects.vercel.app/)
-  is **Ready** on `ui-overhaul`. Eight branch-specific Preview variables provide
-  development Clerk, the shared Neon database, redirects and
-  `KALENDER_BOOKING_MODE=disabled`; no demo host ID is set. Database and Clerk
-  secret are sensitive variables. Vercel Authentication redirects anonymous
-  visitors. The prior direct CLI deployment remains historical.
-- Responsive fixes cover landing Workspace, public profile/event form,
-  App Shell navigation, and Booking Page editor. Local QA covered
-  320, 375, 768, 1024 and 1280 px. The Preview was checked at phone/tablet/
-  desktop widths, including demo account sign-in, Overview and Booking Page.
-  Paused copy is visible and confirmation disabled. No page overflow was found.
-- September 25 Node 22.21.1 `npm run check` passed once after the fixes: 56
-  tests, lint, types, build and compiled action checks. Dev was restarted with
-  fresh `.next` output. Production `main` revision `687cb35` still serves the
-  older UI at `kalender-tau.vercel.app`.
-- Git Preview smoke test: landing/profile/event loaded, confirmation remained
-  disabled, and a demo visitor signed in to Overview. No booking was submitted.
-- No real booking, invitation or inbox-delivery test. Preview shares the Neon
-  database with existing production, while using a different development Clerk
-  instance. No migration or reseed. See [preview review sheet](preview.md).
-- Burmese responses. Explain before Brave use. Preserve working-tree data and
-  keep secrets out of Git.
+- [Protected Preview](https://kalender-git-ui-overhaul-thureinss-projects.vercel.app/)
+  stays browse-only on `3f70d04`, development Clerk/shared Neon. No public access
+  exception. Optional internal QA; CV destination will be stable Production.
+- [Production](https://kalender-tau.vercel.app/) still runs old `main` `687cb35`;
+  its workspace fails on obsolete Clerk `SignedIn`. This branch fixes it.
+- Live keys/shared Neon retained. Production-only redirects, host/profile and
+  three visitor IDs are saved for the next deployment; booking mode disabled.
+  Separate live profile added without replacing development data. Three live
+  visitors have no emails/passwords/Google links; backend ticket creation and
+  revocation passed. Live browser flow awaits deployment.
+- Google defaults are identity-only, saved in Clerk dashboard. Host grant still
+  lacks free/busy; additional host access needs updated Integrations after
+  deployment. Details: [release checklist](release.md).
+- No merge, Production deployment, migration, replacement seed or Preview exposure.
 
-## Next session plan
+## Validation and next steps
 
-1. Review the Git-backed Preview and decide whether browse-only is sufficient
-   for portfolio sharing; Vercel Authentication limits access to the team.
-2. Decide separately whether to enable live demo bookings or promote the UI to
-   production. Real booking/invitation tests need a chosen recipient and cleanup.
+- Final September 26 Node 22.21.1 `npm run check` passed: 85 tests/8 suites,
+  lint, types, production build and compiled action boundaries. Mobile 375px
+  and desktop 1024px visitor layouts had no horizontal overflow. Docs links and
+  diff checks passed. Dev restarted with fresh `.next`; secret pull removed.
+- Resume review complete: changes remain uncommitted/unpushed; GitHub branch
+  heads match the handoff, no open PR, dev running. Release diff and 22 local
+  documentation links checked. User approved commit/merge/Production deployment.
+- Follow the [release checklist](release.md). Reuse the passed gate unless app
+  changes require another check. Do not reprovision accounts or repeat the
+  completed booking test. Announce Brave before using it.
+- After approval, commit/merge/deploy with booking disabled. Verify live visitor
+  flow, grant/check host Calendar access, enable demo mode and run stable-URL QA.
+  CV later. Distinct guest inbox delivery remains optional/unverified.
+- [Backlog](backlog.md) lists unfinished work only;
+  [September 26 evidence](archive/ui-overhaul-2026-09-26.md) holds session detail;
+  [Preview sheet](preview.md) covers protected branch QA.
 
-## Read only when relevant
-
-- [Open backlog](backlog.md): pending checks and release decisions.
-- [Demo runbook](demo-visitors.md): instance/host IDs, visitor credentials, recovery.
-- [Preview review sheet](preview.md): deployment details and Git push guard.
-- [Audit/runbook](pre-deployment-audit.md): data/retry/security evidence.
-- [September 25 evidence](archive/ui-overhaul-2026-09-25.md): completed QA.
-- [Older design history](archive/ui-overhaul-2026-09-17.md): phases and decisions.
-
-Keep this file under 450 words. Root README owns setup and visitor instructions.
+Keep this file under 450 words. Preserve unrelated data and keep secrets out of Git.

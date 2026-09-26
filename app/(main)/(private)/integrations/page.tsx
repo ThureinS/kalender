@@ -26,6 +26,7 @@ export default async function IntegrationsPage() {
   if (!userId) return redirectToSignIn()
 
   const user = await currentUser()
+  const sharedDemoVisitor = user?.privateMetadata.kalenderDemoVisitor === true
   const googleAccount = user?.externalAccounts.find(
     account => isGoogleConnection(account)
   )
@@ -52,7 +53,7 @@ export default async function IntegrationsPage() {
             </CardDescription>
           </div>
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border/80 bg-surface-subtle px-3 py-1.5 text-xs font-medium">
-            {hasCalendarScopes ? (
+            {sharedDemoVisitor ? "Visitor account" : hasCalendarScopes ? (
               <>
                 <CheckCircle2 className="size-3.5 text-primary" />
                 Connected
@@ -72,6 +73,7 @@ export default async function IntegrationsPage() {
         </CardHeader>
         <CardContent className="space-y-5">
           <GoogleCalendarConnectButton
+            sharedDemoVisitor={sharedDemoVisitor}
             connected={Boolean(googleAccount)}
             hasCalendarScopes={hasCalendarScopes}
           />
@@ -88,7 +90,7 @@ export default async function IntegrationsPage() {
               <ShieldCheck className="size-5 text-primary" />
               <p className="mt-3 text-sm font-medium">Access</p>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                {googleAccount
+                {sharedDemoVisitor ? "No personal Calendar access is needed to book with the demo host." : googleAccount
                   ? hasCalendarScopes
                     ? "Calendar scopes are available through Clerk."
                     : "Google is connected, but Kalender still needs Calendar access."
@@ -156,9 +158,9 @@ export default async function IntegrationsPage() {
             </div>
           ) : (
             <div className="rounded-lg border border-dashed border-border bg-background p-6 text-sm leading-6 text-muted-foreground">
-              Google Calendar is the only integration Kalender uses right now.
-              Once connected, this page will show the account and OAuth access
-              Clerk returns for the signed-in user.
+              {sharedDemoVisitor
+                ? "This visitor account has no Google connection. You can explore the workspace and book with the demo host without connecting a personal calendar."
+                : "Google Calendar is the only integration Kalender uses right now. Once connected, this page will show the account and OAuth access Clerk returns for the signed-in user."}
             </div>
           )}
         </CardContent>

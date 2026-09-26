@@ -1,19 +1,42 @@
 import "server-only"
 import { db } from "@/drizzle/db"
 import { BookingReservationTable } from "@/drizzle/schema"
-import { and, eq, gt, lt } from "drizzle-orm"
+import { and, eq, gt, lt, sql } from "drizzle-orm"
+import { DEMO_HOST_BOOKING_LIMIT } from "@/lib/demo-booking-limits"
+
+export class DemoBookingLimitError extends Error {}
 
 export async function getReservation(id: string) {
   return db.query.BookingReservationTable.findFirst({ where: eq(BookingReservationTable.id, id) })
 }
 
-export async function reserveBooking(data: typeof BookingReservationTable.$inferInsert) {
-  // Postgres exclusion constraint serializes overlapping requests across
-  // processes/instances. A duplicate request id is safe to retry.
-  const [reservation] = await db.insert(BookingReservationTable).values(data)
-    .onConflictDoNothing({ target: BookingReservationTable.id }).returning()
-  const result = reservation ?? await getReservation(data.id)
-  if (!result || result.requestHash !== data.requestHash) throw new Error("Request mismatch")
+export async function reserveBooking(data: typeof BookingReservationTable.$inferInsert,
+  bookerClerkUserId: string) {
+  // The host lock and conditional insert run in one Neon transaction. Taking
+  // the lock in a separate statement gives the insert a fresh READ COMMITTED
+  // snapshot after concurrent requests finish. The exclusion constraint still
+  // enforces slot conflicts. Existing request IDs remain retryable at the cap.
+  const payload = { ...data.payload, bookerClerkUserId }
+  await db.batch([
+    db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${data.clerkUserId}, 0))`),
+    db.execute(sql`
+      INSERT INTO "bookingReservations"
+        (id, "clerkUserId", "startTime", "endTime", "requestHash", payload)
+      SELECT ${data.id}::uuid, ${data.clerkUserId},
+        ${data.startTime.toISOString()}::timestamp, ${data.endTime.toISOString()}::timestamp,
+        ${data.requestHash}, ${JSON.stringify(payload)}::jsonb
+      WHERE (
+        SELECT count(*) FROM "bookingReservations"
+        WHERE "clerkUserId" = ${data.clerkUserId}
+          AND "createdAt" > CURRENT_TIMESTAMP - interval '24 hours'
+      ) < ${DEMO_HOST_BOOKING_LIMIT}
+      ON CONFLICT (id) DO NOTHING
+    `),
+  ])
+  const result = await getReservation(data.id)
+  if (!result) throw new DemoBookingLimitError()
+  if (result.requestHash !== data.requestHash ||
+      result.payload.bookerClerkUserId !== bookerClerkUserId) throw new Error("Request mismatch")
   return result
 }
 

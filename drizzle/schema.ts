@@ -157,6 +157,7 @@ export const BookingReservationTable = pgTable("bookingReservations", {
   endTime: timestamp("endTime").notNull(),
   requestHash: text("requestHash").notNull(),
   payload: jsonb("payload").$type<{
+    bookerClerkUserId?: string
     eventId: string
     eventName: string
     eventSlug: string | null

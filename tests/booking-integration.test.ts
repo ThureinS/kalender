@@ -8,9 +8,9 @@ import * as schema from "@/drizzle/schema"
 
 const mocks = vi.hoisted(() => ({ busy: vi.fn(), calendar: vi.fn(), auth: vi.fn() }))
 vi.mock("@/drizzle/db", () => ({ get db() { return Object.assign(database, {
-  batch: async (statements: Array<{ toSQL: () => { sql: string; params: unknown[] } }>) => pg.transaction(async transaction => {
+  batch: async (statements: Array<{ toSQL?: () => { sql: string; params: unknown[] }; getQuery?: () => { sql: string; params: unknown[] } }>) => pg.transaction(async transaction => {
     for (const statement of statements) {
-      const query = statement.toSQL()
+      const query = statement.toSQL?.() ?? statement.getQuery!()
       await transaction.query(query.sql, query.params)
     }
   }),
@@ -23,6 +23,7 @@ import { saveSchedule } from "@/server/actions/schedule"
 import { updateEvent, deleteEvent } from "@/server/actions/events"
 import { updateCurrentUserProfile } from "@/server/actions/profiles"
 import { getBookingReceipt } from "@/server/queries/bookings"
+import { DEMO_BOOKING_LIMIT_MESSAGE, DEMO_HOST_BOOKING_LIMIT } from "@/lib/demo-booking-limits"
 
 const pg = new PGlite({ extensions: { btree_gist } })
 const database = drizzle(pg, { schema })
@@ -189,6 +190,63 @@ it("saves availability and timezone together, scoped to the authenticated owner"
   expect(retained?.timezone).toBe("Asia/Bangkok")
   expect(retained?.availabilities[0].startTime).toBe("09:00")
   await pg.exec('ALTER TABLE "scheduleAvailabilities" DROP CONSTRAINT "testWindow"')
+})
+
+it("lets a shared account exceed the former account cap and preserves owned retries", async () => {
+  const attempts = Array.from({ length: 4 }, (_, index) => ({ ...request(),
+    startTime: new Date(time.getTime() + index * 60 * 60 * 1000),
+  }))
+  const results = await Promise.all(attempts.map(data => createMeeting(data)))
+  expect(results.filter(result => "bookingId" in result)).toHaveLength(4)
+  expect(mocks.calendar).toHaveBeenCalledTimes(4)
+  const reservations = await database.query.BookingReservationTable.findMany()
+  expect(reservations).toHaveLength(4)
+  expect(reservations.every(row => row.payload.bookerClerkUserId === "user_tester")).toBe(true)
+  const completed = attempts.find(data => reservations.some(row => row.id === data.requestId))!
+  expect(await createMeeting(completed)).toEqual({ bookingId: completed.requestId })
+  expect(mocks.calendar).toHaveBeenCalledTimes(4)
+  mocks.auth.mockResolvedValue({ userId: "another-visitor" })
+  expect(await createMeeting(completed)).toHaveProperty("error")
+})
+
+function priorReservations(count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: randomUUID(), clerkUserId: owner, requestHash: "prior-attempt",
+    startTime: new Date(time.getTime() - (index + 1) * 60 * 60 * 1000),
+    endTime: new Date(time.getTime() - (index + 1) * 60 * 60 * 1000 + 30 * 60 * 1000),
+    payload: { eventId, eventName: "Demo", eventSlug: "demo", eventDurationInMinutes: 30,
+      eventLocation: "Online", guestName: "Guest", guestEmail: "guest@example.com",
+      timezone: "UTC", startTime: time.toISOString(), bookerClerkUserId: `visitor-${index}` },
+  }))
+}
+
+it("counts uncertain attempts against the host cap while allowing their original retry", async () => {
+  const attempts = Array.from({ length: 4 }, (_, index) => ({ ...request(),
+    startTime: new Date(time.getTime() + index * 60 * 60 * 1000),
+  }))
+  mocks.calendar.mockRejectedValue(new Error("response lost"))
+  for (const data of attempts.slice(0, 3)) expect(await createMeeting(data)).toHaveProperty("error")
+  await database.insert(schema.BookingReservationTable).values(priorReservations(DEMO_HOST_BOOKING_LIMIT - 3))
+  expect(await createMeeting(attempts[3])).toEqual({ error: DEMO_BOOKING_LIMIT_MESSAGE })
+  expect(mocks.calendar).toHaveBeenCalledTimes(3)
+  mocks.calendar.mockResolvedValue({ id: attempts[0].requestId.replaceAll("-", "") })
+  expect(await createMeeting(attempts[0])).toEqual({ bookingId: attempts[0].requestId })
+  expect(await database.query.BookingReservationTable.findMany()).toHaveLength(DEMO_HOST_BOOKING_LIMIT)
+})
+
+it("caps the host across accounts and ignores reservations older than 24 hours", async () => {
+  const data = request()
+  expect(DEMO_HOST_BOOKING_LIMIT).toBe(500)
+  await database.insert(schema.BookingReservationTable).values(priorReservations(DEMO_HOST_BOOKING_LIMIT - 1))
+  const competing = [data, { ...request(), startTime: new Date(time.getTime() + 60 * 60 * 1000) }]
+  const results = await Promise.all(competing.map(attempt => createMeeting(attempt)))
+  expect(results.filter(result => "bookingId" in result)).toHaveLength(1)
+  expect(results).toContainEqual({ error: DEMO_BOOKING_LIMIT_MESSAGE })
+  expect(mocks.calendar).toHaveBeenCalledTimes(1)
+  expect(await database.query.BookingReservationTable.findMany()).toHaveLength(500)
+  await pg.exec(`UPDATE "bookingReservations" SET "createdAt" = CURRENT_TIMESTAMP - interval '25 hours'`)
+  const expired = { ...request(), startTime: new Date(time.getTime() + 2 * 60 * 60 * 1000) }
+  expect(await createMeeting(expired)).toEqual({ bookingId: expired.requestId })
 })
 
 it("keeps a reservation when local persistence fails after Calendar success", async () => {

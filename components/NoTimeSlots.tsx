@@ -27,11 +27,12 @@ export default function NoTimeSlots({
     calendarUser: { id: string; fullName: string | null }
     profileHandle: string
     eventSlug: string
-    reason?: "no-slots" | "availability-not-set"
+    reason?: "no-slots" | "availability-not-set" | "calendar-unavailable"
     isDemoHost?: boolean
   }) {
     const hostName = calendarUser.fullName || "Kalender host"
     const availabilityNotSet = reason === "availability-not-set"
+    const calendarUnavailable = reason === "calendar-unavailable"
 
     return (
       <BookingPageSplit className="min-h-[calc(100dvh-6rem)] py-8">
@@ -50,7 +51,7 @@ export default function NoTimeSlots({
             </div>
 
             <p className="mt-6 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              {availabilityNotSet ? "Booking Paused" : "No Availability"}
+              {availabilityNotSet || calendarUnavailable ? "Booking Paused" : "No Availability"}
             </p>
             <h1 className="mt-2 break-words font-display text-3xl font-semibold tracking-normal text-foreground lg:text-4xl">
               {event.name}
@@ -86,10 +87,12 @@ export default function NoTimeSlots({
               <CalendarX2 className="size-6" />
             </div>
             <h2 className="mt-5 font-display text-2xl font-semibold tracking-normal">
-              {availabilityNotSet ? "Availability has not been set" : "No open slots right now"}
+              {calendarUnavailable ? "Availability temporarily unavailable" : availabilityNotSet ? "Availability has not been set" : "No open slots right now"}
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-              {availabilityNotSet
+              {calendarUnavailable
+                ? "We could not check the host's calendar. Please try again later. No booking has been created."
+                : availabilityNotSet
                 ? `${hostName} has not opened booking times for this event yet. Please check back after availability is published.`
                 : `${hostName} is currently booked up for this event. You can check back later or choose another available event from this booking page.`}
             </p>
