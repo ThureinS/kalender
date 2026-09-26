@@ -27,7 +27,11 @@ targets; it does not limit who may book the demo host.
 Each target needs private metadata `kalenderDemoVisitor: true` and
 `kalenderDemoVisitorIndex: 0`, `1` or `2`. Live accounts must have external ID
 `kalender-public-demo-visitor-N`, no email addresses and no linked external
-accounts. Development targets may contain only their numbered test addresses.
+accounts. Each live target also needs the backend-assigned username
+`kalender_demo_visitor_N`: Clerk can mint a ticket without an identifier, but
+frontend sign-in rejects it with `sign_in_no_identification_for_user`.
+Username sign-in remains disabled globally; no password or email is added.
+Development targets may contain only their numbered test addresses.
 Linked real identities, banned/locked accounts and changed markers fail closed.
 The app's shared-visitor Calendar button shows guidance instead of connecting.
 

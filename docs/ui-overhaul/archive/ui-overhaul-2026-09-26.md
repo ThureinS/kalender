@@ -106,3 +106,27 @@ recipient `accutility778@gmail.com` and exact cleanup were authorized.
 - Resume from existing changes; do not repeat provisioning, completed audit or
   the cleaned-up real booking test. Production deployment starts with booking
   disabled; host free/busy grant and live demo activation follow verification.
+
+## Approved Production release execution
+
+- User approved commit/merge/deploy after resume review. Commit `f418e9a`,
+  PR #2 Preview build passed, merged as `71fc39d`. Git-backed Production
+  deployment `8JqWVpNZevgqXgqzGm3KriGCo14M` Ready at stable URL with booking
+  disabled; old Clerk `SignedIn` workspace exception resolved.
+- Live buttons initially failed although backend tickets minted. A read-only
+  account inspection confirmed the dedicated visitor boundaries. Frontend
+  token probe returned `sign_in_no_identification_for_user`; probe ticket revoked
+  and no session created. Reused the same three accounts and assigned usernames
+  `kalender_demo_visitor_1` through `kalender_demo_visitor_3`. Global username
+  attribute/sign-in remains disabled; no passwords, emails or Google links added.
+  Ignored mode-600 visitor registry updated. All three Brave buttons then
+  returned to Portfolio Review without passwords, OTP or Google authorization.
+- Visitor Integrations showed shared-account guidance. Storefront/App Shell/
+  paused Booking Page passed 375px and 1024px overflow checks.
+- Host signed in with identity-only Google defaults and refreshed the existing
+  Calendar grant through Integrations. Google listed availability and event
+  permissions as already granted. Clerk now reports both Calendar scopes;
+  read-only primary free/busy returned HTTP 200 without per-calendar errors.
+  Workspace shows Ready to share, setup 4/4. No real booking repeated.
+- Production-only booking mode changed from disabled to demo for next deployment.
+  No other environment scope, keys, database data or Preview protection changed.

@@ -20,7 +20,7 @@ Open [demo visitor access](http://localhost:3000/#demo-access) while signed
 out and choose **Demo Visitor 1, 2 or 3**. With the visitor registry configured,
 you sign in and open Portfolio Review without registration, a password, email
 verification or a Google Calendar connection. Existing signed-in visitors keep
-their own account. The development accounts do not work on the old live site.
+their own account. Production uses its own separate visitor accounts.
 
 These accounts are shared. Keep personal information out of their profiles.
 Submitting a booking creates a real test Calendar event and asks Google to send
@@ -48,7 +48,8 @@ select **Login**, and enter a visitor email/password. Use **424242** if prompted
 for development email verification; no inbox is needed. You return to that event.
 These fallback credentials are hidden with live Clerk keys.
 
-Source changes do not deploy the overhaul to the live site.
+For the deployed demo, open [Kalender](https://kalender-tau.vercel.app/#demo-access)
+and choose one of the shared visitor buttons.
 See [demo visitor setup](docs/ui-overhaul/demo-visitors.md) for configuration,
 account safeguards and Production setup.
 
