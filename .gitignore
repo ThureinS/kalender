@@ -47,4 +47,6 @@ next-env.d.ts
 
 .env.local
 CONTEXT.md
-app/theme-lab/
+learn.md
+.env*
+!.env.example

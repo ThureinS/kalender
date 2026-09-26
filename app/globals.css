@@ -1,13 +1,21 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *, [data-kalender-theme="midnight"], [data-kalender-theme="midnight"] *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-owner-accent: var(--owner-accent);
+  --color-owner-accent-foreground: var(--owner-accent-foreground);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-raised: var(--surface-raised);
+  --color-app-shell-background: var(--app-shell-background);
+  --color-storefront-background: var(--storefront-background);
+  --color-storefront-rail: var(--storefront-rail);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -63,186 +71,63 @@
   }
 }
 
+/* ============ Production Theme Tokens ============ */
+.kalender-navigation-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 100;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  background: color-mix(in oklch, var(--kalender-lime-strong) 15%, transparent);
+}
+
+.kalender-navigation-progress-bar {
+  height: 100%;
+  width: 35%;
+  background: var(--kalender-lime-strong);
+  animation: kalender-navigation-progress 1.2s ease-in-out infinite;
+}
+
+@keyframes kalender-navigation-progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(290%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kalender-navigation-progress-bar {
+    animation: none;
+    width: 100%;
+  }
+}
+
 :root {
-  --radius: 0.625rem;
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --font-geist-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+    monospace;
+  --font-kalender-display: var(--font-geist-sans);
+  --font-space-grotesk: var(--font-kalender-display);
+  --font-instrument-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times,
+    serif;
+  --font-display: var(--font-kalender-display, var(--font-geist-sans));
+  --kalender-midnight: oklch(0.141 0.005 285.82);
+  --kalender-daylight: oklch(0.984 0.003 285.82);
+  --kalender-lime: oklch(0.876 0.222 128.6);
+  --kalender-lime-strong: oklch(0.64 0.207 131.7);
 }
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-/* ============ Theme Lab (throwaway, /theme-lab) ============ */
-.font-display {
-  font-family: var(--font-display);
-}
-
-.theme-midnight {
-  --radius: 0.75rem;
-  --background: oklch(0.141 0.005 285.82);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.185 0.006 285.82);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.185 0.006 285.82);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.876 0.222 128.6);
-  --primary-foreground: oklch(0.141 0.005 285.82);
-  --secondary: oklch(1 0 0 / 7%);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.24 0.007 285.82);
-  --muted-foreground: oklch(0.705 0.011 285.82);
-  --accent: oklch(1 0 0 / 9%);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.65 0.2 25);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.876 0.222 128.6);
-}
-
-.theme-nebula {
-  --radius: 1rem;
-  --background: oklch(0.132 0.016 294.6);
-  --foreground: oklch(0.98 0.005 300);
-  --card: oklch(0.176 0.02 294.6);
-  --card-foreground: oklch(0.98 0.005 300);
-  --popover: oklch(0.176 0.02 294.6);
-  --popover-foreground: oklch(0.98 0.005 300);
-  --primary: oklch(0.71 0.19 302);
-  --primary-foreground: oklch(0.132 0.016 294.6);
-  --secondary: oklch(1 0 0 / 8%);
-  --secondary-foreground: oklch(0.98 0.005 300);
-  --muted: oklch(0.235 0.025 294.6);
-  --muted-foreground: oklch(0.72 0.03 300);
-  --accent: oklch(1 0 0 / 10%);
-  --accent-foreground: oklch(0.98 0.005 300);
-  --destructive: oklch(0.65 0.2 25);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.71 0.19 302);
-}
-
-.theme-editorial {
-  --radius: 0.25rem;
-  --background: oklch(0.978 0.005 95);
-  --foreground: oklch(0.21 0.012 60);
-  --card: oklch(0.995 0.002 95);
-  --card-foreground: oklch(0.21 0.012 60);
-  --popover: oklch(0.995 0.002 95);
-  --popover-foreground: oklch(0.21 0.012 60);
-  --primary: oklch(0.21 0.012 60);
-  --primary-foreground: oklch(0.978 0.005 95);
-  --secondary: oklch(0.935 0.008 90);
-  --secondary-foreground: oklch(0.21 0.012 60);
-  --muted: oklch(0.94 0.008 90);
-  --muted-foreground: oklch(0.46 0.02 70);
-  --accent: oklch(0.92 0.012 85);
-  --accent-foreground: oklch(0.21 0.012 60);
-  --destructive: oklch(0.55 0.2 27);
-  --border: oklch(0.86 0.01 80);
-  --input: oklch(0.86 0.01 80);
-  --ring: oklch(0.21 0.012 60 / 40%);
-}
-
-.theme-brutalist {
-  --radius: 0rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0 0 0);
-  --primary: oklch(0 0 0);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.93 0 0);
-  --secondary-foreground: oklch(0 0 0);
-  --muted: oklch(0.95 0 0);
-  --muted-foreground: oklch(0.35 0 0);
-  --accent: oklch(0.93 0 0);
-  --accent-foreground: oklch(0 0 0);
-  --destructive: oklch(0.58 0.23 27);
-  --border: oklch(0 0 0);
-  --input: oklch(0 0 0);
-  --ring: oklch(0 0 0);
-}
-
-.theme-daylight {
-  --radius: 0.75rem;
-  --background: oklch(0.984 0.003 285.82);
+.light,
+[data-kalender-theme="daylight"] {
+  color-scheme: light;
+  --radius: 0.5rem;
+  --background: var(--kalender-daylight);
   --foreground: oklch(0.21 0.006 285.82);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.006 285.82);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.006 285.82);
-  --primary: oklch(0.64 0.207 131.7);
+  --primary: var(--kalender-lime-strong);
   --primary-foreground: oklch(0.994 0 0);
   --secondary: oklch(0.94 0.004 285.82);
   --secondary-foreground: oklch(0.21 0.006 285.82);
@@ -253,49 +138,171 @@
   --destructive: oklch(0.58 0.23 27);
   --border: oklch(0.91 0.004 285.82);
   --input: oklch(0.89 0.004 285.82);
-  --ring: oklch(0.64 0.207 131.7);
+  --ring: var(--kalender-lime-strong);
+  --owner-accent: var(--kalender-lime-strong);
+  --owner-accent-foreground: oklch(0.994 0 0);
+  --surface: oklch(1 0 0);
+  --surface-subtle: oklch(0.965 0.004 285.82);
+  --surface-raised: oklch(0.995 0.002 285.82);
+  --app-shell-background: oklch(0.972 0.004 285.82);
+  --storefront-background: var(--background);
+  --storefront-rail: oklch(0.955 0.004 285.82);
+  --chart-1: var(--kalender-lime-strong);
+  --chart-2: oklch(0.53 0.12 190);
+  --chart-3: oklch(0.55 0.12 260);
+  --chart-4: oklch(0.72 0.16 72);
+  --chart-5: oklch(0.62 0.18 35);
+  --sidebar: oklch(0.99 0.002 285.82);
+  --sidebar-foreground: oklch(0.21 0.006 285.82);
+  --sidebar-primary: var(--kalender-lime-strong);
+  --sidebar-primary-foreground: oklch(0.994 0 0);
+  --sidebar-accent: oklch(0.94 0.004 285.82);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.82);
+  --sidebar-border: oklch(0.91 0.004 285.82);
+  --sidebar-ring: var(--kalender-lime-strong);
 }
 
-.theme-blackout {
-  --radius: 0rem;
-  --background: oklch(0.09 0 0);
+:root:not(.light),
+.dark,
+[data-kalender-theme="midnight"] {
+  color-scheme: dark;
+  --radius: 0.5rem;
+  --background: var(--kalender-midnight);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.13 0 0);
+  --card: oklch(0.185 0.006 285.82);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.13 0 0);
+  --popover: oklch(0.185 0.006 285.82);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.876 0.222 128.6);
-  --primary-foreground: oklch(0.09 0 0);
-  --secondary: oklch(1 0 0 / 10%);
+  --primary: var(--kalender-lime);
+  --primary-foreground: var(--kalender-midnight);
+  --secondary: oklch(1 0 0 / 7%);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.2 0 0);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(1 0 0 / 12%);
+  --muted: oklch(0.24 0.007 285.82);
+  --muted-foreground: oklch(0.705 0.011 285.82);
+  --accent: oklch(1 0 0 / 9%);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.65 0.2 25);
-  --border: oklch(0.985 0 0);
-  --input: oklch(0.985 0 0);
-  --ring: oklch(0.876 0.222 128.6);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: var(--kalender-lime);
+  --owner-accent: var(--kalender-lime);
+  --owner-accent-foreground: var(--kalender-midnight);
+  --surface: oklch(0.185 0.006 285.82);
+  --surface-subtle: oklch(0.18 0.006 285.82);
+  --surface-raised: oklch(0.22 0.007 285.82);
+  --app-shell-background: oklch(0.155 0.005 285.82);
+  --storefront-background: var(--background);
+  --storefront-rail: oklch(0.18 0.006 285.82);
+  --chart-1: var(--kalender-lime);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.74 0.12 260);
+  --chart-4: oklch(0.72 0.16 72);
+  --chart-5: oklch(0.68 0.18 35);
+  --sidebar: oklch(0.17 0.006 285.82);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: var(--kalender-lime);
+  --sidebar-primary-foreground: var(--kalender-midnight);
+  --sidebar-accent: oklch(1 0 0 / 9%);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: var(--kalender-lime);
 }
 
-.theme-coral {
-  --radius: 0.875rem;
-  --background: oklch(0.152 0.018 50);
-  --foreground: oklch(0.97 0.008 60);
-  --card: oklch(0.198 0.022 50);
-  --card-foreground: oklch(0.97 0.008 60);
-  --popover: oklch(0.198 0.022 50);
-  --popover-foreground: oklch(0.97 0.008 60);
-  --primary: oklch(0.72 0.185 47);
-  --primary-foreground: oklch(0.152 0.018 50);
-  --secondary: oklch(1 0 0 / 8%);
-  --secondary-foreground: oklch(0.97 0.008 60);
-  --muted: oklch(0.26 0.025 50);
-  --muted-foreground: oklch(0.73 0.03 55);
-  --accent: oklch(1 0 0 / 10%);
-  --accent-foreground: oklch(0.97 0.008 60);
-  --destructive: oklch(0.62 0.21 25);
-  --border: oklch(1 0 0 / 11%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.185 47);
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 36%, transparent);
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.kalender-auth .cl-rootBox,
+.kalender-auth .cl-cardBox {
+  width: 100%;
+  max-width: 100%;
+}
+
+.kalender-auth .cl-cardBox {
+  border: 1px solid color-mix(in oklch, var(--border) 80%, transparent) !important;
+  border-radius: var(--radius) !important;
+  background: var(--card) !important;
+  box-shadow: 0 0 44px -24px var(--primary) !important;
+}
+
+.kalender-auth .cl-card,
+.kalender-auth .cl-footer {
+  background: var(--card) !important;
+}
+
+.kalender-auth .cl-headerTitle,
+.kalender-auth .cl-formHeaderTitle,
+.kalender-auth .cl-formFieldLabel,
+.kalender-auth .cl-identityPreviewText,
+.kalender-auth .cl-userPreviewMainIdentifier {
+  color: var(--foreground) !important;
+}
+
+.kalender-auth .cl-headerSubtitle,
+.kalender-auth .cl-formHeaderSubtitle,
+.kalender-auth .cl-dividerText,
+.kalender-auth .cl-footerActionText,
+.kalender-auth .cl-userPreviewSecondaryIdentifier {
+  color: var(--muted-foreground) !important;
+}
+
+.kalender-auth .cl-dividerLine {
+  background: color-mix(in oklch, var(--border) 80%, transparent) !important;
+}
+
+.kalender-auth .cl-socialButtonsBlockButton,
+.kalender-auth .cl-formFieldInput,
+.kalender-auth .cl-otpCodeFieldInput {
+  border: 1px solid color-mix(in oklch, var(--border) 80%, transparent) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+}
+
+.kalender-auth .cl-otpCodeFieldInput {
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground) !important;
+}
+
+.kalender-auth .cl-badge {
+  background: var(--secondary) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+  opacity: 1;
+}
+
+.kalender-auth .cl-formFieldInput::placeholder {
+  color: var(--muted-foreground) !important;
+}
+
+.kalender-auth .cl-formButtonPrimary {
+  border-radius: var(--radius-sm) !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  box-shadow: none !important;
+}
+
+.kalender-auth .cl-footerActionLink,
+.kalender-auth .cl-formResendCodeLink,
+.kalender-auth .cl-footerPagesLink {
+  color: var(--primary) !important;
+}
+
+.kalender-auth .cl-footer {
+  border-top: 1px solid color-mix(in oklch, var(--border) 80%, transparent) !important;
 }

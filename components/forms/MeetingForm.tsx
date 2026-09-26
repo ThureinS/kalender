@@ -3,39 +3,83 @@
 "use client"
 import { meetingFormSchema } from "@/schema/meetings"
 import { createMeeting } from "@/server/actions/meetings"
+import type { BookingAccess } from "@/server/bookingAccess"
+import { SignInButton } from "@clerk/nextjs"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { toZonedTime } from "date-fns-tz"
-import { useRouter } from "next/navigation"
-import { useMemo } from "react"
+import { formatInTimeZone, toZonedTime } from "date-fns-tz"
+import { useNavigationRouter } from "@/components/NavigationProgress"
+import type { ReactNode } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { formatDate, formatTimeString, formatTimezoneOffset } from "@/lib/formatters"
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Button } from "../ui/button"
 import { cn } from "@/lib/utils"
-import { CalendarIcon } from "lucide-react"
+import { CalendarCheck2, Check, Clock, Globe2, Mail, UserRound } from "lucide-react"
 import { Calendar } from "../ui/calendar"
 import { isSameDay } from "date-fns"
 import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import Booking from "../Booking"
 
  // Enables client-side rendering for this component
 
+function BookingStep({
+  icon,
+  title,
+  description,
+  children,
+}: {
+  icon: ReactNode
+  title: string
+  description: string
+  children: ReactNode
+}) {
+  return (
+    <section className="rounded-lg border border-border/80 bg-card p-4 shadow-[0_0_28px_-24px_var(--primary)] sm:p-5">
+      <div className="mb-4 flex gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border/80 bg-background text-primary">
+          {icon}
+        </div>
+        <div>
+          <h3 className="font-display text-base font-semibold tracking-normal text-foreground">
+            {title}
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {description}
+          </p>
+        </div>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 export default function MeetingForm({
     validTimes,
+    bookingAccess,
     eventId,
     clerkUserId,
+    profileHandle,
+    eventSlug,
   }: {
+    bookingAccess: BookingAccess
     validTimes: Date[] // Predefined list of available times
     eventId: string     // ID of the event to associate with the meeting
     clerkUserId: string // User ID from authentication system
+    profileHandle: string
+    eventSlug: string
   }) {
 
-    const router = useRouter()
+    const router = useNavigationRouter()
+    const requestId = useRef<string | null>(null)
+    const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const defaultDate = validTimes[0]
+      ? toZonedTime(validTimes[0], defaultTimezone)
+      : undefined
 
         // Initialize form using React Hook Form and Zod schema
    // Create a form using React Hook Form with Zod for validation
@@ -46,7 +90,8 @@ export default function MeetingForm({
         // Set initial default values for the form fields
         defaultValues: {
         // Automatically detect the user's local timezone
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezone: defaultTimezone,
+        date: defaultDate,
     
         // Start with empty fields for guest info
         guestName: "",
@@ -58,11 +103,39 @@ export default function MeetingForm({
     // Watch timezone and selected date fields for updates
     const timezone = form.watch("timezone")
     const date = form.watch("date")
+    const startTime = form.watch("startTime")
+    const guestName = form.watch("guestName")
+    const guestEmail = form.watch("guestEmail")
+    const bookingsPaused = bookingAccess === "disabled" || bookingAccess === "other-host"
+    const canSubmit =
+      bookingAccess === "allowed" &&
+      Boolean(startTime) &&
+      guestName.trim().length > 0 &&
+      z.string().email().safeParse(guestEmail).success
 
         // Convert valid times to the selected timezone
     const validTimesInTimezone = useMemo(() => {
         return validTimes.map(date => toZonedTime(date, timezone))
     }, [validTimes, timezone])
+
+    const selectedDateTimes = useMemo(() => {
+      if (!date) return []
+
+      return validTimes.filter(time => isSameDay(toZonedTime(time, timezone), date))
+    }, [date, validTimes, timezone])
+
+    useEffect(() => {
+      const firstAvailableDate = validTimesInTimezone[0]
+      if (!firstAvailableDate) return
+
+      const selectedDateHasSlots =
+        date && validTimesInTimezone.some(time => isSameDay(time, date))
+
+      if (!selectedDateHasSlots) {
+        form.setValue("date", firstAvailableDate, { shouldValidate: true })
+        form.resetField("startTime")
+      }
+    }, [date, form, validTimesInTimezone])
 
     // Handle form submission
     async function onSubmit(values: z.infer<typeof meetingFormSchema>) {
@@ -70,18 +143,24 @@ export default function MeetingForm({
         // Call the createMeeting action (assuming it handles success/failure internally)
         const meetingData =  await createMeeting({
             ...values,
+            requestId: requestId.current ?? (requestId.current = crypto.randomUUID()),
             eventId,
             clerkUserId,
         })
 
-            // Initialize the path variable to use it later in the finally block
-            const path = `/book/${meetingData.clerkUserId}/${meetingData.eventId}/success?startTime=${meetingData.startTime.toISOString()}`;
+            if ("error" in meetingData) {
+              form.setError("root", { message: meetingData.error })
+              return
+            }
+
+            // The receipt is backed by a persisted booking.
+            const path = `/book/${profileHandle}/${eventSlug}/success?bookingId=${meetingData.bookingId}`;
             router.push(path)
     
-        } catch (error: any) {
+        } catch {
         // Handle any error that occurs during the meeting creation
         form.setError("root", {
-            message: `There was an unknown error saving your event ${error.message}`,
+            message: "We could not confirm your booking. Retry with the same details.",
         })
         }
     }
@@ -94,75 +173,110 @@ export default function MeetingForm({
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="flex gap-6 flex-col"
+                className="flex flex-col gap-5"
               >
+                {bookingAccess !== "allowed" && (
+                  <div className="rounded-md border border-border bg-muted p-3 text-sm text-muted-foreground">
+                    <p>{bookingAccess === "sign-in-required"
+                      ? "Sign in with a demo account or your own account to try a booking."
+                      : bookingAccess === "other-host"
+                        ? "You can explore this page. Test bookings are available only with the designated demo host."
+                        : "You can explore this page. Live demo bookings are currently paused."}</p>
+                    {bookingAccess === "sign-in-required" && (
+                      <SignInButton
+                        mode="modal"
+                        forceRedirectUrl={`/book/${profileHandle}/${eventSlug}`}
+                        signUpForceRedirectUrl={`/book/${profileHandle}/${eventSlug}`}
+                      >
+                        <Button type="button" className="mt-3">Sign in to try booking</Button>
+                      </SignInButton>
+                    )}
+                  </div>
+                )}
                 {/* Show root error message if form submission fails */}
                 {form.formState.errors.root && (
-                  <div className="text-destructive text-sm">
+                  <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                     {form.formState.errors.root.message}
                   </div>
                 )}
         
-                {/* Timezone selection field */}
-                <FormField
-                  control={form.control}
-                  name="timezone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Timezone</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {/* List all supported timezones with offset */}
-                          {Intl.supportedValuesOf("timeZone").map(timezone => (
-                            <SelectItem key={timezone} value={timezone}>
-                              {timezone}
-                              {` (${formatTimezoneOffset(timezone)})`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-        
-                <div className="flex gap-4 flex-col md:flex-row">
-                  {/* Date picker field */}
+                <div className="grid gap-3 rounded-lg border border-border/80 bg-surface-subtle/30 p-3 text-sm text-muted-foreground sm:grid-cols-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Globe2 className="size-4 text-primary" />
+                    <span className="truncate">{timezone}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CalendarCheck2 className="size-4 text-primary" />
+                    <span>{date ? formatDate(date) : "Choose a date"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="size-4 text-primary" />
+                    <span>{startTime ? formatTimeString(toZonedTime(startTime, timezone)) : "Choose a time"}</span>
+                  </div>
+                </div>
+
+                <BookingStep
+                  icon={<Globe2 className="size-4" />}
+                  title="Confirm your timezone"
+                  description={bookingsPaused
+                    ? "Available slots are adjusted to your local time for this preview."
+                    : "Available slots are adjusted to your local time before you book."}
+                >
                   <FormField
                     control={form.control}
-                    name="date"
+                    name="timezone"
                     render={({ field }) => (
-                      <Popover>
-                        <FormItem className="flex-1">
+                      <FormItem>
+                        <FormLabel>Timezone</FormLabel>
+                        <Select
+                          onValueChange={value => {
+                            field.onChange(value)
+                            form.resetField("startTime")
+                          }}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-11 w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-80">
+                            {/* Show time options only for the selected day */}
+                            {Intl.supportedValuesOf("timeZone").map(timezone => (
+                              <SelectItem key={timezone} value={timezone}>
+                                {timezone}
+                                {` (${formatTimezoneOffset(timezone)})`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </BookingStep>
+        
+                <BookingStep
+                  icon={<Clock className="size-4" />}
+                  title="Choose a slot"
+                  description="Dates without availability are disabled. Pick any visible start time."
+                >
+                  <div className="grid gap-5 lg:grid-cols-[minmax(17rem,0.9fr)_minmax(0,1fr)]">
+                    {/* Date picker field */}
+                    <FormField
+                      control={form.control}
+                      name="date"
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Date</FormLabel>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "pl-3 text-left font-normal flex w-full",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  formatDate(field.value)
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
+                          <div className="overflow-hidden rounded-lg border border-border/80 bg-background">
                             <Calendar
                               mode="single"
                               selected={field.value}
-                              onSelect={field.onChange}
+                              onSelect={selectedDate => {
+                                field.onChange(selectedDate)
+                                form.resetField("startTime")
+                              }}
                               disabled={date =>
                                 // Only allow selecting dates that have available time slots
                                 !validTimesInTimezone.some(time =>
@@ -170,60 +284,74 @@ export default function MeetingForm({
                                 )
                               }
                               initialFocus
+                              className="mx-auto"
                             />
-                          </PopoverContent>
+                          </div>
                           <FormMessage />
                         </FormItem>
-                      </Popover>
-                    )}
-                  />
-        
-                  {/* Time selection field */}
-                  <FormField
-                    control={form.control}
-                    name="startTime"
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>Time</FormLabel>
-                        <Select
-                          disabled={date == null || timezone == null}
-                          onValueChange={value =>
-                            field.onChange(new Date(Date.parse(value)))
-                          }
-                          defaultValue={field.value?.toISOString()}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={
-                                  date == null || timezone == null
-                                    ? "Select a date/timezone first"
-                                    : "Select a meeting time"
-                                }
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {/* Show time options only for the selected day */}
-                            {validTimesInTimezone
-                              .filter(time => isSameDay(time, date))
-                              .map(time => (
-                                <SelectItem
-                                  key={time.toISOString()}
-                                  value={time.toISOString()}
-                                >
-                                  {formatTimeString(time)}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-        
-                <div className="flex gap-4 flex-col md:flex-row">
+                      )}
+                    />
+
+                    {/* Time selection field */}
+                    <FormField
+                      control={form.control}
+                      name="startTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Time</FormLabel>
+                          <div className="max-h-96 min-h-72 overflow-y-auto rounded-lg border border-border/80 bg-background p-3">
+                            {date == null ? (
+                              <div className="flex h-full min-h-48 items-center justify-center rounded-md border border-dashed border-border/80 px-4 text-center text-sm text-muted-foreground">
+                                Select a date to see available times.
+                              </div>
+                            ) : selectedDateTimes.length === 0 ? (
+                              <div className="flex h-full min-h-48 items-center justify-center rounded-md border border-dashed border-border/80 px-4 text-center text-sm text-muted-foreground">
+                                No slots are available on {formatDate(date)}.
+                              </div>
+                            ) : (
+                              <FormControl>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+                                  {selectedDateTimes.map(time => {
+                                    const selected =
+                                      field.value?.toISOString() === time.toISOString()
+
+                                    return (
+                                      <Button
+                                        key={time.toISOString()}
+                                        type="button"
+                                        variant={selected ? "default" : "outline"}
+                                        aria-label={formatInTimeZone(time, timezone, "h:mm a zzz")}
+                                        className={cn(
+                                          "h-11 justify-between font-mono",
+                                          selected &&
+                                            "shadow-[0_0_20px_-8px_var(--primary)]"
+                                        )}
+                                        onClick={() => field.onChange(time)}
+                                      >
+                                        {formatInTimeZone(time, timezone, "h:mm a")}
+                                        {selected && <Check className="size-4" />}
+                                      </Button>
+                                    )
+                                  })}
+                                </div>
+                              </FormControl>
+                            )}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </BookingStep>
+
+                <BookingStep
+                  icon={<UserRound className="size-4" />}
+                  title="Add your details"
+                  description={bookingsPaused
+                    ? "You can explore this form, but your details will not be submitted."
+                    : "The host will receive your contact information and notes."}
+                >
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
                   {/* Guest name input */}
                   <FormField
                     control={form.control}
@@ -232,7 +360,7 @@ export default function MeetingForm({
                       <FormItem className="flex-1">
                         <FormLabel>Your Name</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input placeholder="Jane Doe" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -247,8 +375,13 @@ export default function MeetingForm({
                       <FormItem className="flex-1">
                         <FormLabel>Your Email</FormLabel>
                         <FormControl>
-                          <Input type="email" {...field} />
+                          <Input type="email" placeholder="jane@example.com" {...field} />
                         </FormControl>
+                        <FormDescription>
+                          {bookingsPaused
+                            ? "This preview will not submit your details or send an invitation."
+                            : "To test the Google Calendar invitation, enter your own real email address. You can do this while signed in with a demo account."}
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -263,29 +396,51 @@ export default function MeetingForm({
                     <FormItem>
                       <FormLabel>Notes</FormLabel>
                       <FormControl>
-                        <Textarea className="resize-none" {...field} />
+                        <Textarea
+                          className="min-h-24 resize-none"
+                          placeholder="Anything the host should know before the call?"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
-                />
-        
+                    )}
+                  />
+                </BookingStep>
+
                 {/* Cancel and Submit buttons */}
-                <div className="flex gap-2 justify-end">
+                <div className="flex flex-col gap-4 rounded-lg border border-border/80 bg-surface-subtle/30 p-4 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="flex min-w-0 items-start gap-3 text-sm">
+                    <Mail className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground">
+                        {startTime
+                          ? `${formatDate(toZonedTime(startTime, timezone))} at ${formatTimeString(toZonedTime(startTime, timezone))}`
+                          : bookingsPaused ? "Select a time to explore the form" : "Select a time to finish booking"}
+                      </p>
+                      <p className="mt-1 text-muted-foreground">
+                        {bookingsPaused
+                          ? "Booking confirmation is unavailable in this preview."
+                          : "Google Calendar will be asked to send an invitation to the email you enter."}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button
                     disabled={form.formState.isSubmitting}
                     type="button"
                     asChild
                     variant="outline"
                   >
-                    <Link href={`/book/${clerkUserId}`}>Cancel</Link>
+                    <Link href={`/book/${profileHandle}`}>Cancel</Link>
                   </Button>
-                  <Button 
-                  className="cursor-pointer hover:scale-105 bg-blue-400 hover:bg-blue-600"
-                  disabled={form.formState.isSubmitting} 
-                  type="submit">
-                    Book Event
+                  <Button
+                    disabled={form.formState.isSubmitting || !canSubmit}
+                    type="submit"
+                  >
+                    {bookingsPaused ? "Booking paused" : "Confirm booking"}
                   </Button>
+                  </div>
                 </div>
               </form>
             </Form>

@@ -1,15 +1,13 @@
 'use client'
-import { BlinkBlur } from "react-loading-indicators"
 
 const Booking = () => {
     return (
-        <div className="flex items-center justify-center">
-          <BlinkBlur
-            color={["#32cd32", "#327fcd", "#cd32cd", "#cd8032"]}
-            size="large"
-            text="Booking Event, don't click on anything⛔⛔..."
-            textColor="black"
+        <div className="flex items-center justify-center gap-3 text-muted-foreground">
+          <div
+            className="size-6 animate-spin rounded-full border-2 border-muted border-t-primary"
+            aria-hidden="true"
           />
+          <p className="text-sm font-medium">Booking event...</p>
         </div>
       )
       

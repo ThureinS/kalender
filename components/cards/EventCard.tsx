@@ -2,17 +2,22 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { formatEventDescription } from "@/lib/formatters"
 import { Button } from "../ui/button"
-import Link from "next/link"
+import Link from "@/components/NavigationLink"
 import { CopyEventButton } from "../CopyEventButton"
+import { CalendarClock, Clock3, Eye, EyeOff, MapPin } from "lucide-react"
 
   // Type definition for event card props
 type EventCardProps = {
     id: string
     isActive: boolean
     name: string
+    slug: string | null
     description: string | null
     durationInMinutes: number
-    clerkUserId: string
+    location: string
+    visibility: "public" | "private"
+    bufferMinutes: number
+    profileHandle: string
   }
   
   // Component to display a single event card
@@ -20,42 +25,74 @@ type EventCardProps = {
     id,
     isActive,
     name,
+    slug,
     description,
     durationInMinutes,
-    clerkUserId,
+    location,
+    visibility,
+    bufferMinutes,
+    profileHandle,
   }: EventCardProps) {
+    const canCopy = isActive && visibility === "public"
 
     return (
-        <Card className={cn("flex flex-col border-4 border-blue-500/10 shadow-2xl transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110", !isActive && " bg-accent border-accent")}>
+        <Card className={cn("flex flex-col overflow-hidden transition-colors hover:border-primary/50", !canCopy && "bg-accent/50")}>
           {/* Card header with title and formatted duration */}
-          <CardHeader className={cn(!isActive && "opacity-50")}>
-            <CardTitle>{name}</CardTitle>
-            <CardDescription>
-              {formatEventDescription(durationInMinutes)}
-            </CardDescription>
+          <CardHeader>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <CardTitle className="break-words font-display text-xl tracking-normal">{name}</CardTitle>
+                <CardDescription className="mt-2 flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 px-2.5 py-1">
+                    <Clock3 className="size-3.5 text-primary" />
+                    {formatEventDescription(durationInMinutes)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 px-2.5 py-1">
+                    {canCopy ? (
+                      <Eye className="size-3.5 text-primary" />
+                    ) : (
+                      <EyeOff className="size-3.5" />
+                    )}
+                    {canCopy ? "Public" : "Hidden"}
+                  </span>
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
     
           {/* Show event description if available */}
-          {description != null && (
-            <CardContent className={cn(!isActive && "opacity-50")}>
-              {description}
+          {description && (
+            <CardContent>
+              <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
+                {description}
+              </p>
             </CardContent>
           )}
+
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <div className="flex min-w-0 items-center gap-2">
+              <MapPin className="size-4 shrink-0 text-primary" />
+              <span className="truncate">{location}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CalendarClock className="size-4 shrink-0 text-primary" />
+              {bufferMinutes > 0
+                ? `${formatEventDescription(bufferMinutes)} buffer`
+                : "No buffer"}
+            </div>
+          </CardContent>
     
           {/* Card footer with copy and edit buttons */}
-          <CardFooter className="flex justify-end gap-2 mt-auto">
+          <CardFooter className="mt-auto flex justify-end gap-2 border-t border-border/80 pt-4">
             {/* Show copy button only if event is active */}
-            {isActive && (
+            {canCopy && (
               <CopyEventButton
                 variant="outline"
-                eventId={id}
-                clerkUserId={clerkUserId}
+                bookingPath={`/book/${profileHandle}/${slug ?? id}`}
               />
             )}
             {/* Edit event button */}
-            <Button 
-            className="cursor-pointer hover:scale-105 bg-blue-400 hover:bg-blue-600"
-            asChild>
+            <Button asChild>
               <Link href={`/events/${id}/edit`}>Edit</Link>
             </Button>
           </CardFooter>

@@ -4,6 +4,54 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 
 > **Note**: This is a learning project. There is no license associated with this repository.
 
+## Portfolio Demo Status
+
+The overhaul is available locally and on a protected, browse-only
+[Vercel Preview](https://kalender-git-ui-overhaul-thureinss-projects.vercel.app/).
+The original production app remains at
+[kalender-tau.vercel.app](https://kalender-tau.vercel.app/).
+See the short [current handoff](docs/ui-overhaul/README.md) for verified status
+and [open backlog](docs/ui-overhaul/backlog.md) for remaining work. This README
+contains setup and visitor instructions; session history lives in the archive.
+
+## Try the local demo
+
+Open [demo visitor access](http://localhost:3000/#demo-access) while signed
+out and choose **Demo Visitor 1, 2 or 3**. With the visitor registry configured,
+you sign in and open Portfolio Review without registration, a password, email
+verification or a Google Calendar connection. Existing signed-in visitors keep
+their own account. The development accounts do not work on the old live site.
+
+These accounts are shared. Keep personal information out of their profiles.
+Submitting a booking creates a real test Calendar event and asks Google to send
+an invitation, although no meeting takes place. Use your own inbox in the form.
+The demo permits **500 new reservations across the host per rolling 24 hours**,
+with **no per-account cap**. Original retries remain possible; uncertain
+reservations count until reconciled. Booking confirmation is paused in
+`disabled` mode.
+
+### Development password fallback
+
+When the optional ticket registry is unset, development demo mode shows these
+intentionally public fallback credentials:
+
+| Visitor | Email |
+| --- | --- |
+| 1 | `demo-tester-1+clerk_test@example.com` |
+| 2 | `demo-tester-2+clerk_test@example.com` |
+| 3 | `demo-tester-3+clerk_test@example.com` |
+
+Shared demo-only password: `Aa9!Tv__ZajQ_8U4xfxuDWMYcqbU`
+
+Open [Portfolio Review](http://localhost:3000/book/demo-strategy-studio/portfolio-review),
+select **Login**, and enter a visitor email/password. Use **424242** if prompted
+for development email verification; no inbox is needed. You return to that event.
+These fallback credentials are hidden with live Clerk keys.
+
+Source changes do not deploy the overhaul to the live site.
+See [demo visitor setup](docs/ui-overhaul/demo-visitors.md) for configuration,
+account safeguards and Production setup.
+
 ## 🚀 Tech Stack
 
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router, TurboPack)
@@ -25,14 +73,16 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 - **Public Booking**: Shareable booking pages for others to schedule meetings.
 - **Dashboard**: Private area for managing events and viewing schedules.
 - **Availability Scheduling**: Configure availability windows (implied by schema).
-- **Theme Support**: Dark/Light mode using `next-themes`.
+- **Product surfaces**: Midnight public pages and a dark-by-default workspace,
+  with a light/dark toggle beside the account avatar. The workspace preference
+  persists in this browser; public booking and auth pages stay Midnight.
 
 ## 📂 Project Structure
 
 - **`app/(main)/(public)`**: Public-facing routes (e.g., Landing page, Booking pages).
 - **`app/(main)/(private)`**: Authenticated application routes (Dashboard, Events, Schedule).
 - **`app/(auth)`**: Authentication routes (Login, Register).
-- **`drizzle/schema`**: Database schema definitions (Events, Meetings, Schedule).
+- **`drizzle/schema.ts`**: Profiles, events, schedules, booking history, and reservations.
 - **`components`**: Reusable UI components.
 - **`lib`**: Utility functions and shared logic.
 
@@ -40,7 +90,7 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 
 ### Prerequisites
 
-- Node.js (version compatible with Next.js 15)
+- Node.js 22.12+ (Node 22; see `.nvmrc`)
 - npm or yarn or pnpm
 - A Neon database instance
 - A Clerk account
@@ -56,12 +106,17 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 
 2. **Install dependencies**
 
+   The lockfile was synchronized and a clean install verified on September 17
+   with Node 22.21.1 and npm 10.9.4.
+
    ```bash
-   npm install
+   npm ci
    ```
 
 3. **Environment Setup**
-   Create a `.env.local` file in the root directory and add the following variables (based on `drizzle.config.ts` and typical setups):
+   Copy `.env.example` to `.env.local` and configure the intended database and matching Clerk keys. The current preview
+   plan reuses development Clerk and the shared Neon database; scope those keys
+   to the preview because existing production uses a different Clerk instance. Live bookings default to disabled; demo-host access is configured separately. Required service credentials:
 
    ```env
    DATABASE_URL=your_neon_database_url
@@ -69,11 +124,27 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
    CLERK_SECRET_KEY=your_clerk_secret_key
    ```
 
+   To enable demo booking, verify `accutility778@gmail.com` in that Clerk instance
+   and set `KALENDER_DEMO_HOST_CLERK_USER_ID` to its user ID, plus
+   `KALENDER_BOOKING_MODE=demo`. Any signed-in visitor can then book only that
+   host. Missing host configuration and the retired `testers` mode block writes;
+   `KALENDER_DEMO_BOOKER_IDS` is no longer used. Shared demo logins are visitors,
+   not the Calendar host. Enter your own real email in the booking form to test
+   Google Calendar invitations; the login email can stay a demo address.
+   Set `KALENDER_DEMO_PROFILE_HANDLE` to that host's public handle to point the
+   landing demo links at the correct profile. Development and Production Clerk
+   identities need separate profiles when sharing a database.
+
+   Google sign-in should request only identity scopes in Clerk's Google
+   connection. Hosts grant Calendar permissions separately through Integrations.
+   For shared visitor logins, follow the [demo visitor setup](docs/ui-overhaul/demo-visitors.md)
+   before running the account helper; password sign-in and credential verification
+   are prerequisites to publishing logins.
+
 4. **Database Migration**
-   Push the schema to your database:
+   Apply committed migrations to the intended database (the CLI loads `.env.local`):
 
    ```bash
-   npm run db:generate
    npm run db:migrate
    ```
 
@@ -87,10 +158,21 @@ A modern scheduling and calendar application built with **Next.js 15**. This pro
 
 - `npm run dev`: Starts the development server with TurboPack.
 - `npm run build`: Builds the application for production.
+- `npm run lint`: Runs non-interactive ESLint with zero warnings allowed.
+- `npm test`: Runs critical-flow tests against disposable PostgreSQL and mocked APIs.
+- `npm run typecheck`: Checks TypeScript.
+- `npm run check`: Runs lint, tests, typecheck, build, and compiled-boundary checks.
 - `npm run start`: Starts the production server.
 - `npm run db:generate`: Generates Drizzle migrations.
 - `npm run db:migrate`: Applies Drizzle migrations.
 - `npm run db:studio`: Opens Drizzle Studio to view/edit data.
+- `npm run db:seed:demo`: Seeds a curated demo workspace for a dedicated Clerk test user.
+- `npm run demo:create-testers`: User-run account creation helper; changes Clerk data.
+  Development Clerk only; defaults to `demo-tester-N+clerk_test@example.com`
+  with development email verification code `424242`.
+  Existing emails are reused without updating or verifying their passwords.
+  Creates visitor logins, not the Calendar host. Verify sign-in before publishing
+  credentials; no visitor allowlist is needed in demo mode.
 
 ## 🤝 Contributing
 

@@ -47,13 +47,9 @@ export function formatEventDescription(durationInMinutes: number) : string {
       return dateFormatter.format(date)
     }
 
-    // Create a formatter that includes both date and time (e.g., "Apr 10, 2025, 9:45 AM")
-    const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    })
-    
-    // Format a Date object into a readable date + time string
-    export function formatDateTime(date: Date) {
-      return dateTimeFormatter.format(date)
+    // Use the saved guest timezone when displaying booking history on a server.
+    export function formatDateTime(date: Date, timezone?: string) {
+      return new Intl.DateTimeFormat("en", {
+        dateStyle: "medium", timeStyle: "short", timeZone: timezone,
+      }).format(date)
     }

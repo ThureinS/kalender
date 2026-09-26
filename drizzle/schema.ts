@@ -1,6 +1,6 @@
 import { DAYS_OF_WEEK_IN_ORDER } from "@/constants";
 import { relations } from "drizzle-orm";
-import { boolean, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 
 // Define a reusable `createdAt` timestamp column with default value set to now
@@ -11,6 +11,35 @@ const updatedAt = timestamp("updatedAt")
   .notNull()
   .defaultNow()
   .$onUpdate(() => new Date()) // automatically updates to current time on update
+
+export const eventVisibilityEnum = pgEnum("eventVisibility", ["public", "private"])
+export const bookingStatusEnum = pgEnum("bookingStatus", [
+  "confirmed",
+  "canceled",
+  "rescheduled",
+])
+
+export const UserProfileTable = pgTable(
+  "userProfiles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clerkUserId: text("clerkUserId").notNull(),
+    handle: text("handle").notNull(),
+    displayName: text("displayName").notNull(),
+    avatarUrl: text("avatarUrl"),
+    headline: text("headline"),
+    bio: text("bio"),
+    timezone: text("timezone").notNull().default("UTC"),
+    location: text("location"),
+    accent: text("accent").notNull().default("lime"),
+    createdAt,
+    updatedAt,
+  },
+  table => ([
+    uniqueIndex("userProfilesClerkUserIdUnique").on(table.clerkUserId),
+    uniqueIndex("userProfilesHandleUnique").on(table.handle),
+  ])
+)
 
 // Define the "events" table with fields like name, description, and duration
 export const EventTable = pgTable(
@@ -24,8 +53,12 @@ export const EventTable = pgTable(
   
       // .defaultRandom(): Automatically fills this column with a randomly generated UUID (v4) if no value is provided.
       name: text("name").notNull(), // event name
+      slug: text("slug"),
       description: text("description"), // optional description
       durationInMinutes: integer("durationInMinutes").notNull(), // duration of the event
+      location: text("location").notNull().default("Google Meet"),
+      visibility: eventVisibilityEnum("visibility").notNull().default("public"),
+      bufferMinutes: integer("bufferMinutes").notNull().default(0),
       clerkUserId: text("clerkUserId").notNull(),// ID of the user who created it (from Clerk)
       isActive: boolean("isActive").notNull().default(true),// whether the event is currently active
       createdAt,// timestamp when event was created
@@ -34,7 +67,38 @@ export const EventTable = pgTable(
     },
     table => ([
         index("clerkUserIdIndex").on(table.clerkUserId),// index on clerkUserId for faster querying
+        uniqueIndex("eventsClerkUserIdSlugUnique").on(table.clerkUserId, table.slug),
       ])
+)
+
+export const BookingTable = pgTable(
+  "bookings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clerkUserId: text("clerkUserId").notNull(),
+    eventId: uuid("eventId").references(() => EventTable.id, {
+      onDelete: "set null",
+    }),
+    eventName: text("eventName").notNull(),
+    eventSlug: text("eventSlug"),
+    eventDurationInMinutes: integer("eventDurationInMinutes").notNull(),
+    eventLocation: text("eventLocation"),
+    guestName: text("guestName").notNull(),
+    guestEmail: text("guestEmail").notNull(),
+    guestNotes: text("guestNotes"),
+    timezone: text("timezone").notNull(),
+    startTime: timestamp("startTime").notNull(),
+    endTime: timestamp("endTime").notNull(),
+    googleCalendarEventId: text("googleCalendarEventId"),
+    googleCalendarHtmlLink: text("googleCalendarHtmlLink"),
+    status: bookingStatusEnum("status").notNull().default("confirmed"),
+    createdAt,
+    updatedAt,
+  },
+  table => ([
+    index("bookingsClerkUserIdStartTimeIndex").on(table.clerkUserId, table.startTime),
+    index("bookingsEventIdIndex").on(table.eventId),
+  ])
 )
 
 // Define the "schedules" table, one per user, with timezone and timestamps
@@ -83,3 +147,27 @@ export const ScheduleAvailabilityRelations = relations(
       }),
     })
   )
+
+// Overlap exclusion is declared in migration 0004 (Drizzle has no exclusion
+// constraint builder). Reservations survive uncertain external API outcomes.
+export const BookingReservationTable = pgTable("bookingReservations", {
+  id: uuid("id").primaryKey(),
+  clerkUserId: text("clerkUserId").notNull(),
+  startTime: timestamp("startTime").notNull(),
+  endTime: timestamp("endTime").notNull(),
+  requestHash: text("requestHash").notNull(),
+  payload: jsonb("payload").$type<{
+    bookerClerkUserId?: string
+    eventId: string
+    eventName: string
+    eventSlug: string | null
+    eventDurationInMinutes: number
+    eventLocation: string | null
+    guestName: string
+    guestEmail: string
+    guestNotes?: string
+    timezone: string
+    startTime: string
+  }>().notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+})

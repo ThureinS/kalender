@@ -1,39 +1,45 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Toaster } from "sonner";
-
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
-});
+import { PendingAppToast } from "@/components/ui/pending-app-toast";
+import { Toaster } from "@/components/ui/sonner";
+import { NavigationProgressProvider } from "@/components/NavigationProgress";
+import AppThemeProvider from "@/components/AppThemeProvider";
+import CalendarConnectionRecovery from "@/components/integrations/CalendarConnectionRecovery";
 
 export const metadata: Metadata = {
     title: "Kalender",
-    description: "Kalender is a simple and efficient calendar app that helps you manage your events, meetings, and schedules with ease. Stay organized and never miss an important date again!",
+    description: "Kalender helps solo professionals publish booking pages, event links, availability, and meeting history.",
 };
 
 export default function RootLayout({
-                                       children,
-                                   }: Readonly<{
+    children,
+}: Readonly<{
     children: React.ReactNode;
 }>) {
     return (
-        <ClerkProvider>
-            <html lang="en">
-            <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased animate-fade-in`}
-            >
-            {children}
-            <Toaster />
+        <html lang="en" suppressHydrationWarning>
+            <body className="antialiased animate-fade-in">
+                <AppThemeProvider>
+                    <ClerkProvider appearance={{ variables: {
+                        colorPrimary: "var(--primary)",
+                        colorPrimaryForeground: "var(--primary-foreground)",
+                        colorBackground: "var(--card)",
+                        colorForeground: "var(--foreground)",
+                        colorMutedForeground: "var(--muted-foreground)",
+                        colorInput: "var(--background)",
+                        colorInputForeground: "var(--foreground)",
+                        colorNeutral: "var(--foreground)",
+                    } }}>
+                        <NavigationProgressProvider>
+                            <CalendarConnectionRecovery />
+                            {children}
+                            <PendingAppToast />
+                            <Toaster />
+                        </NavigationProgressProvider>
+                    </ClerkProvider>
+                </AppThemeProvider>
             </body>
-            </html>
-        </ClerkProvider>
+        </html>
     );
 }
